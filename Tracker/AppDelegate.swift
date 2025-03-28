@@ -10,10 +10,18 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
+    var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Создаем UIWindow вручную
+        window = UIWindow(frame: UIScreen.main.bounds)
+        
+        // Устанавливаем корневой контроллер
+        window?.rootViewController = ViewController()
+        
+        // Делаем окно видимым и ключевым (активным)
+        window?.makeKeyAndVisible()
+        
         return true
     }
 
