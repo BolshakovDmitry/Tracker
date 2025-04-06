@@ -4,12 +4,19 @@ protocol HabitCreationViewControllerProtocol: AnyObject {
     var delegate: habitCreationViewControllerDelegate? { get set }
 }
 
+protocol CategorySelectionDelegate: AnyObject {
+    func didSelectCategory(_ category: String)
+}
+
+protocol ScheduleSelectionDelegate: AnyObject {
+    func didSelectSchedule(_ schedule: Set<WeekDay>)
+}
+
 final class HabitCreationViewController: UIViewController {
-    
+
     // MARK: - public fields
     
     var delegate: habitCreationViewControllerDelegate?
-    
     
     // MARK: - UI Elements
     
@@ -146,6 +153,8 @@ final class HabitCreationViewController: UIViewController {
     
     private var selectedEmojiIndex: IndexPath?
     private var selectedColorIndex: IndexPath?
+    private var selectedCategory: String?
+    private var selectedSchedule: Set<WeekDay> = []
     
     // MARK: - Lifecycle
     
@@ -239,30 +248,65 @@ final class HabitCreationViewController: UIViewController {
     
     @objc private func createButtonTapped() {
         // Проверяем что все поля заполнены
-        guard
-            let text = nameTextField.text, !text.isEmpty,
-            let emojiIndex = selectedEmojiIndex?.item,
-            let colorIndex = selectedColorIndex?.item
-        else {
-            // Здесь можно показать алерт с ошибкой
-            print("Необходимо заполнить все поля")
-            return
+        // Проверяем, что все поля заполнены
+                guard
+                    let text = nameTextField.text, !text.isEmpty,
+                    let emojiIndex = selectedEmojiIndex?.item,
+                    let colorIndex = selectedColorIndex?.item,
+                    !selectedSchedule.isEmpty // Проверяем, что расписание выбрано
+                else {
+                    // Здесь можно показать алерт с ошибкой
+                    print("Необходимо заполнить все поля")
+                    return
+                }
+                
+                let selectedEmoji = emojis[emojiIndex]
+                let selectedColor = colors[colorIndex]
+
+                // Создаем новую привычку с выбранным расписанием
+                let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: selectedSchedule, type: .habit)
+                
+                // Здесь будет логика сохранения новой привычки
+                print("Создана новая привычка: \(newTracker)")
+                
+                // Используем категорию или "Общее", если категория не выбрана
+                delegate?.addTracker(newTracker, to: selectedCategory ?? "Общее")
+        
+        let previousVC = self.presentingViewController
+        
+        // Закрываем оба экрана
+           dismiss(animated: true) {
+               // После закрытия HabitCreationViewController закрываем и TrackerTypesViewController
+               previousVC?.dismiss(animated: true)
+           }
+    }
+    
+    // Добавьте метод для форматирования дней недели для отображения на кнопке
+        private func formattedSchedule(_ weekDays: Set<WeekDay>) -> String {
+            // Если выбраны все 7 дней, показываем "Каждый день"
+            if weekDays.count == 7 {
+                return "Каждый день"
+            }
+            
+            // Сортируем дни по порядку и формируем строку с сокращенными названиями
+            let sortedDays = weekDays.sorted { $0.rawValue < $1.rawValue }
+            let shortNames = sortedDays.map { shortName(for: $0) }
+            return shortNames.joined(separator: ", ")
         }
         
-        let selectedEmoji = emojis[emojiIndex]
-        let selectedColor = colors[colorIndex]
-        var weekDaysMock = Set<WeekDay>()
-        weekDaysMock.insert(.friday)
-        let scheduleMock = TrackerSchedule(weekDays: weekDaysMock)
-        
-        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: scheduleMock, type: .habit)
-        
-        // Здесь будет логика сохранения новой привычки
-        print("Создана новая привычка: \(newTracker)")
-        
-        delegate?.addTracker(newTracker, to: "Тест")
-        dismiss(animated: true)
-    }
+        // Метод для получения сокращенных названий дней недели
+        private func shortName(for weekDay: WeekDay) -> String {
+            switch weekDay {
+            case .monday: return "Пн"
+            case .tuesday: return "Вт"
+            case .wednesday: return "Ср"
+            case .thursday: return "Чт"
+            case .friday: return "Пт"
+            case .saturday: return "Сб"
+            case .sunday: return "Вс"
+            }
+        }
+    
     
     @objc private func cancelButtonTapped() {
         dismiss(animated: true)
@@ -270,12 +314,26 @@ final class HabitCreationViewController: UIViewController {
     
     @objc private func categoryButtonTapped() {
         print("Переход к выбору категории")
-        // Здесь будет логика перехода к выбору категории
+        let categoryVC = CategoryViewController()
+        
+        categoryVC.delegate = self
+        
+        categoryVC.modalPresentationStyle = .pageSheet
+        
+        present(categoryVC, animated: true)
+        
     }
     
     @objc private func scheduleButtonTapped() {
         print("Переход к настройке расписания")
-        // Здесь будет логика перехода к настройке расписания
+        // Создаем экземпляр нового контроллера
+                let scheduleVC = ScheduleViewController()
+                // Устанавливаем текущий класс как делегат
+                scheduleVC.delegate = self
+                // Задаем стиль представления
+                scheduleVC.modalPresentationStyle = .pageSheet
+                // Показываем экран выбора расписания
+                present(scheduleVC, animated: true)
     }
 }
 
@@ -364,4 +422,29 @@ extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         return UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 0)
     }
+}
+
+// MARK: - CategorySelectionDelegate
+
+extension HabitCreationViewController: CategorySelectionDelegate {
+    func didSelectCategory(_ category: String) {
+        categoryButton.setTitle(category, for: .normal)
+        selectedCategory = category
+    }
+}
+
+extension HabitCreationViewController: ScheduleSelectionDelegate {
+    func didSelectSchedule(_ schedule: Set<WeekDay>) {
+            // Сохраняем выбранное расписание
+            selectedSchedule = schedule
+            
+            // Обновляем текст на кнопке расписания
+            if !schedule.isEmpty {
+                // Показываем выбранные дни в компактном формате
+                scheduleButton.setTitle(formattedSchedule(schedule), for: .normal)
+            } else {
+                // Возвращаем стандартный текст, если ничего не выбрано
+                scheduleButton.setTitle("Расписание", for: .normal)
+            }
+        }
 }

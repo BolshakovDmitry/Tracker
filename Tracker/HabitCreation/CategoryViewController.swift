@@ -1,6 +1,9 @@
 import UIKit
 
+
 final class CategoryViewController: UIViewController {
+    
+    weak var delegate: CategorySelectionDelegate?
     
     // MARK: - UI Elements
     
@@ -86,16 +89,14 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        print("Выбрана категория: \(categories[indexPath.row])")
-        
-        // Создаем контроллер создания привычки
-        let habitCreationVC = HabitCreationViewController()
-        
-        // Настраиваем модальное представление
-        habitCreationVC.modalPresentationStyle = .pageSheet
-        
-        // Показываем экран создания привычки
-        present(habitCreationVC, animated: true, completion: nil)
+                let selectedCategory = categories[indexPath.row]
+                print("Выбрана категория: \(selectedCategory)")
+                
+                // Передаем выбранную категорию делегату
+                delegate?.didSelectCategory(selectedCategory)
+                
+                // Закрываем экран
+                dismiss(animated: true)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
