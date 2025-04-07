@@ -10,6 +10,7 @@ final class TrackersViewController: UIViewController {
     
     var visibleCategories: [TrackerCategory] = []
     var categories: [TrackerCategory] = []
+    private var dataManager = DataManager.shared
     
     // Выполненные трекеры
     var completedTrackers: [TrackerRecord] = []
@@ -336,27 +337,18 @@ extension TrackersViewController: UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as! TrackerCollectionViewCell
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
-        //let isCompleted = completedTrackers.contains { $0.id == tracker.id }
-        //let completedDays = completedTrackers.filter { $0.id == tracker.id }.count
+
         
         let isCompleted = checkIsCompletedToday(id: tracker.id)
         
         cell.delegate = self
         
-        cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath)
+        let daysCompleted = completedTrackers.filter { currentTracker in
+            currentTracker.id == tracker.id
+        }.count
         
-        //        cell.completeAction = { [weak self] _ in
-        //            guard let self = self else { return }
-        //
-        //            if isCompleted {
-        //                self.uncompleteTracker(id: tracker.id, date: self.datePicker.date)
-        //            } else {
-        //                self.completeTracker(id: tracker.id, date: self.datePicker.date)
-        //            }
-        //
-        //            collectionView.reloadItems(at: [indexPath])
-        //        }
-        
+        cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
+    
         return cell
     }
     

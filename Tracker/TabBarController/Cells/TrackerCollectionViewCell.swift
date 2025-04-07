@@ -116,7 +116,7 @@ class TrackerCollectionViewCell: UICollectionViewCell {
         
     }
     
-    func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath) {
+    func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int) {
         self.indexPath = indexPath
         self.isCompletedToday = isCompletedToday
         trackerId = tracker.id
@@ -124,6 +124,7 @@ class TrackerCollectionViewCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
+        dayCountLabel.text = String(daysCompleted)
         
         let image = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
         //completeButton.setImage(image, for: .normal)
