@@ -24,6 +24,17 @@ final class TrackersViewController: UIViewController {
         return picker
     }()
     
+    private var placeholderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "emptyTrackers")
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.clipsToBounds = true
+        imageView.isHidden = true
+        return imageView
+        
+    }()
+    
     private lazy var searchTextField: UISearchTextField = {
         let textfield = UISearchTextField()
         textfield.backgroundColor = .ypGrey
@@ -78,6 +89,9 @@ final class TrackersViewController: UIViewController {
         setupNavigationBar()
         reloadTableWithActualDayTrackers()
         searchTextField.becomeFirstResponder()
+        if categories.isEmpty {
+            placeholderImageView.isHidden = false
+        }
     }
     
     // Создание начальных моковых данных
@@ -126,7 +140,7 @@ final class TrackersViewController: UIViewController {
             ]
         )
         
-        // Сохраняем моковые категории
+         //Сохраняем моковые категории
         visibleCategories = [sportCategory, selfDevelopmentCategory]
         categories = [sportCategory, selfDevelopmentCategory]
     }
@@ -139,6 +153,7 @@ final class TrackersViewController: UIViewController {
         // Добавляем коллекцию на экран
         view.addSubview(trackersCollectionView)
         view.addSubview(searchTextField)
+        view.addSubview(placeholderImageView)
         
         // Настраиваем констрейнты
         NSLayoutConstraint.activate([
@@ -147,11 +162,18 @@ final class TrackersViewController: UIViewController {
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
         ])
         NSLayoutConstraint.activate([
+            placeholderImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            placeholderImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+           // placeholderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+           // placeholderImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+        NSLayoutConstraint.activate([
             trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
             trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
+        
         
         datePicker.addTarget(self, action: #selector(dateChanged(_:)), for: .valueChanged)
         
@@ -160,27 +182,7 @@ final class TrackersViewController: UIViewController {
     private func reloadTableWithActualDayTrackers() {
         dateChanged(datePicker)
     }
-    
-    
-    // Метод для отметки трекера как выполненного
-    func completeTracker(id: UUID, date: Date) {
-        let record = TrackerRecord(id: id, date: date)
         
-        // Проверяем, не был ли трекер уже отмечен в эту дату
-        if !completedTrackers.contains(record) {
-            // Создаем новый массив с добавленной записью
-            completedTrackers = completedTrackers + [record]
-        }
-    }
-    
-    // Метод для отмены отметки трекера как выполненного
-    func uncompleteTracker(id: UUID, date: Date) {
-        let record = TrackerRecord(id: id, date: date)
-        
-        // Создаем новый массив без этой записи
-        completedTrackers = completedTrackers.filter { $0 != record }
-    }
-    
     private func setupNavigationBar() {
         // Настраиваем заголовок
         title = "Трекеры"
@@ -296,7 +298,7 @@ extension TrackersViewController: habitCreationViewControllerDelegate {
         }
         
         // Присваиваем новый массив категорий
-        visibleCategories = newCategories
+        categories = newCategories
         
         // Обновляем интерфейс
         updateUI()
@@ -337,7 +339,11 @@ extension TrackersViewController: UICollectionViewDataSource {
         //let isCompleted = completedTrackers.contains { $0.id == tracker.id }
         //let completedDays = completedTrackers.filter { $0.id == tracker.id }.count
         
-        cell.configure(tracker: tracker)
+        let isCompleted = checkIsCompletedToday(id: tracker.id)
+        
+        cell.delegate = self
+        
+        cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath)
         
         //        cell.completeAction = { [weak self] _ in
         //            guard let self = self else { return }
@@ -352,6 +358,15 @@ extension TrackersViewController: UICollectionViewDataSource {
         //        }
         
         return cell
+    }
+    
+    private func checkIsCompletedToday(id: UUID) -> Bool {
+        
+        
+        completedTrackers.contains { trackerRecord in
+            let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+             return trackerRecord.id == id && isSameDay
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -398,7 +413,29 @@ extension TrackersViewController: UITextFieldDelegate {
         filterTrackers(by: chosenDay, searchText: textField.text)
         return true
     }
+}
 
+extension TrackersViewController: TrackerCellDelegate {
+    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
+        
+        if isComplete {
+            let newTracker = TrackerRecord(id: id, date: datePicker.date)
+            completedTrackers.append(newTracker)
+            trackersCollectionView.reloadItems(at: [indexPath])
+        } else {
+            completedTrackers.removeAll { trackerRecord in
+                let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+                return trackerRecord.id == id && isSameDay
+            }
+            trackersCollectionView.reloadItems(at: [indexPath])
+        }
+        
+    }
+
+    
+    
+    
+    
 }
 
 

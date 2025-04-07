@@ -1,5 +1,9 @@
 import UIKit
 
+
+protocol TrackerCellDelegate: AnyObject {
+    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath)
+}
 class TrackerCollectionViewCell: UICollectionViewCell {
     // Элементы интерфейса ячейки (эмодзи, название, цвет и т.д.)
     private let containerView: UIView = {
@@ -49,10 +53,15 @@ class TrackerCollectionViewCell: UICollectionViewCell {
     }()
     
     // ID трекера для обработки нажатия
-    var trackerId: UUID?
+    private var trackerId: UUID?
+    
+    private var isCompletedToday: Bool = false
+    private var indexPath: IndexPath?
     
     // Настройка действия для кнопки
     var completeAction: ((Bool) -> Void)?
+    
+    weak var delegate: TrackerCellDelegate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -98,15 +107,26 @@ class TrackerCollectionViewCell: UICollectionViewCell {
     }
     
     @objc private func completeButtonTapped() {
-        completeAction?(true)
+        guard let trackerId = self.trackerId, let indexPath = self.indexPath else {
+            assertionFailure("Failed to get cellID or indexPath for cell in CellClass ")
+            return
+        }
+        isCompletedToday.toggle()
+        delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath)
+        
     }
     
-    func configure(tracker: Tracker) {
+    func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath) {
+        self.indexPath = indexPath
+        self.isCompletedToday = isCompletedToday
         trackerId = tracker.id
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
+        
+        let image = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
+        //completeButton.setImage(image, for: .normal)
        // dayCountLabel.text = String.localizedStringWithFormat("", completedDays)
         
         // Настройка внешнего вида кнопки в зависимости от состояния
