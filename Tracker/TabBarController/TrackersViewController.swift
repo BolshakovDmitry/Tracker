@@ -46,7 +46,7 @@ final class TrackersViewController: UIViewController {
         
         // Настройка плейсхолдера
         let attributes = [
-            NSAttributedString.Key.foregroundColor: UIColor.ypBlack
+            NSAttributedString.Key.foregroundColor: UIColor.ypGrey
         ]
         let attributedPlaceholder = NSAttributedString(
             string: "Поиск",
@@ -135,9 +135,10 @@ final class TrackersViewController: UIViewController {
         title = "Трекеры"
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        // Добавляем кнопку "+" слева
+        // Создаем кастомную кнопку с жирным плюсом
         let addButton = UIBarButtonItem(
-            barButtonSystemItem: .add,
+            image: UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(weight: .bold)),
+            style: .plain,
             target: self,
             action: #selector(addButtonTapped)
         )
