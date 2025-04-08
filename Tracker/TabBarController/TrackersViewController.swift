@@ -8,8 +8,6 @@ final class TrackersViewController: UIViewController {
     
     // MARK: - public fields
     
-    var visibleCategories: [TrackerCategory] = []
-    var categories: [TrackerCategory] = []
     private var dataManager = DataManager.shared
     
     // Выполненные трекеры
@@ -38,7 +36,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var searchTextField: UISearchTextField = {
         let textfield = UISearchTextField()
-        textfield.backgroundColor = .ypGrey
+        textfield.backgroundColor = UIColor(named: "#7676801F")
         textfield.textColor = .black
         textfield.translatesAutoresizingMaskIntoConstraints = false
         textfield.layer.cornerRadius = 16
@@ -85,67 +83,15 @@ final class TrackersViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        createInitialMockData()
         setupUI()
         setupNavigationBar()
         reloadTableWithActualDayTrackers()
         searchTextField.becomeFirstResponder()
-        if categories.isEmpty {
+        if dataManager.categories.isEmpty {
             placeholderImageView.isHidden = false
         }
     }
-    
-    // Создание начальных моковых данных
-    private func createInitialMockData() {
-        // Создаем две категории с двумя трекерами в каждой
         
-        // Первая категория "Спорт"
-        let sportCategory = TrackerCategory(
-            title: "Спорт",
-            trackers: [
-                Tracker(
-                    name: "Бег по утрам",
-                    color: UIColor(red: 0.2, green: 0.81, blue: 0.41, alpha: 1.0),
-                    emoji: "🏃‍♂️",
-                    schedule: Set([.monday, .wednesday, .friday]),
-                    type: .habit
-                ),
-                Tracker(
-                    name: "Отжимания",
-                    color: UIColor(red: 0.51, green: 0.17, blue: 0.94, alpha: 1.0),
-                    emoji: "💪",
-                    schedule: Set([.tuesday, .thursday, .saturday]),
-                    type: .habit
-                )
-            ]
-        )
-        
-        // Вторая категория "Саморазвитие"
-        let selfDevelopmentCategory = TrackerCategory(
-            title: "Саморазвитие",
-            trackers: [
-                Tracker(
-                    name: "Чтение книг",
-                    color: UIColor(red: 0.47, green: 0.58, blue: 0.96, alpha: 1.0),
-                    emoji: "📚",
-                    schedule: Set(WeekDay.allCases), // Ежедневно
-                    type: .habit
-                ),
-                Tracker(
-                    name: "Медитация",
-                    color: UIColor(red: 1.00, green: 0.60, blue: 0.80, alpha: 1.0),
-                    emoji: "🧘‍♂️",
-                    schedule: Set([.monday, .wednesday, .friday, .sunday]),
-                    type: .habit
-                )
-            ]
-        )
-        
-         //Сохраняем моковые категории
-        visibleCategories = [sportCategory, selfDevelopmentCategory]
-        categories = [sportCategory, selfDevelopmentCategory]
-    }
-    
     // MARK: - Setup UI
     
     private func setupUI() {
@@ -195,6 +141,7 @@ final class TrackersViewController: UIViewController {
             target: self,
             action: #selector(addButtonTapped)
         )
+        addButton.tintColor = .ypBlack
         navigationItem.leftBarButtonItem = addButton
         
         // Добавляем DatePicker справа
@@ -230,7 +177,7 @@ final class TrackersViewController: UIViewController {
         
         if searchText == nil {
             // Фильтруем по дням недели
-            let filteredCategories = categories.map { category in
+            let filteredCategories = dataManager.categories.map { category in
                 TrackerCategory(title: category.title,
                                 trackers: category.trackers.filter { tracker in
                     tracker.schedule.contains { weekDay in
@@ -238,12 +185,12 @@ final class TrackersViewController: UIViewController {
                     }
                 })
             }.filter { !$0.trackers.isEmpty }
-            visibleCategories = filteredCategories
+            dataManager.visibleCategories = filteredCategories
         } else {
             
             // Дополнительная фильтрация по тексту, если он предоставлен
             if let text = searchText, !text.isEmpty {
-                 let filteredCategoriesByDateAndTextField = categories.map { category in
+                let filteredCategoriesByDateAndTextField = dataManager.categories.map { category in
                     TrackerCategory(title: category.title,
                                     trackers: category.trackers.filter { tracker in
                         tracker.name.lowercased().contains(text.lowercased()) && tracker.schedule.contains { weekDay in
@@ -251,7 +198,7 @@ final class TrackersViewController: UIViewController {
                         }
                     })
                 }.filter { !$0.trackers.isEmpty }
-                visibleCategories = filteredCategoriesByDateAndTextField
+                dataManager.visibleCategories = filteredCategoriesByDateAndTextField
             }
             
         }
@@ -278,7 +225,7 @@ extension TrackersViewController: habitCreationViewControllerDelegate {
         var newCategories = [TrackerCategory]()
         var categoryExists = false
         
-        for category in visibleCategories {
+        for category in dataManager.visibleCategories {
             if category.title == categoryTitle {
                 // Создаем новый массив трекеров с добавленным трекером
                 let newTrackers = category.trackers + [tracker]
@@ -298,18 +245,18 @@ extension TrackersViewController: habitCreationViewControllerDelegate {
             newCategories.append(newCategory)
         }
         
-        // Присваиваем новый массив категорий
-        categories = newCategories
+        // обновляем массивы в датаменеджер
+        dataManager.updateCategories(with: newCategories)
         
         // Обновляем интерфейс
-        updateUI()
+        trackersCollectionView.reloadData()
         
-        print("Категории после добавления:", visibleCategories)
+        print("Категории после добавления:", dataManager.visibleCategories)
     }
     
     // Метод для обновления интерфейса после изменения категорий
     private func updateUI() {
-        if visibleCategories.isEmpty {
+        if dataManager.visibleCategories.isEmpty {
             // Показываем заглушку, если категорий нет
             
             trackersCollectionView.isHidden = true
@@ -326,17 +273,17 @@ extension TrackersViewController: habitCreationViewControllerDelegate {
 // MARK: - UICollectionViewDataSource
 extension TrackersViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return visibleCategories.count
+        return dataManager.visibleCategories.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return visibleCategories[section].trackers.count
+        return dataManager.visibleCategories[section].trackers.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as! TrackerCollectionViewCell
         
-        let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
+        let tracker = dataManager.visibleCategories[indexPath.section].trackers[indexPath.item]
 
         
         let isCompleted = checkIsCompletedToday(id: tracker.id)
@@ -369,7 +316,7 @@ extension TrackersViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! TrackerHeaderView
             
-            headerView.configure(with: visibleCategories[indexPath.section].title)
+            headerView.configure(with: dataManager.visibleCategories[indexPath.section].title)
             return headerView
         }
         
@@ -423,11 +370,6 @@ extension TrackersViewController: TrackerCellDelegate {
         }
         
     }
-
-    
-    
-    
-    
 }
 
 

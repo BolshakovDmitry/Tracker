@@ -12,6 +12,11 @@ class DataManager {
         createInitialMockData()
     }
     
+    func updateCategories(with updatedCategories: [TrackerCategory]){
+        categories = updatedCategories
+        visibleCategories = updatedCategories
+    }
+    
     // Создание начальных моковых данных
     func createInitialMockData() {
         // Создаем две категории с двумя трекерами в каждой

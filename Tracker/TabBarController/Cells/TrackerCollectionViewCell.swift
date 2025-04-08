@@ -124,22 +124,16 @@ class TrackerCollectionViewCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
-        dayCountLabel.text = String(daysCompleted)
+        if daysCompleted == 1 {
+                dayCountLabel.text = "1 день"
+            } else if daysCompleted >= 2 && daysCompleted <= 4 {
+                dayCountLabel.text = "\(daysCompleted) дня"
+            } else {
+                dayCountLabel.text = "\(daysCompleted) дней"
+            }
         
-        let image = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
-        //completeButton.setImage(image, for: .normal)
-       // dayCountLabel.text = String.localizedStringWithFormat("", completedDays)
+        let image: Void = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
         
-        // Настройка внешнего вида кнопки в зависимости от состояния
-//        if isCompleted {
-//            completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
-//            completeButton.backgroundColor = tracker.color
-//        } else {
-//            completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
-//            completeButton.backgroundColor = .clear
-//            completeButton.layer.borderWidth = 1
-//            completeButton.layer.borderColor = tracker.color.cgColor
-//        }
     }
 }
 
