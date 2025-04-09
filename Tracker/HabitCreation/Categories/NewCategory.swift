@@ -11,6 +11,7 @@ final class NewCategory: UIViewController {
     weak var delegate: NewCategoryDelegate?
     private let minCategoryNameLength = 4
     private let dataManager = DataManager.shared
+    private let alertPresenter = AlertPresenter.shared
     
     // MARK: - UI Elements
     
@@ -118,9 +119,8 @@ final class NewCategory: UIViewController {
             return результат || категория.title == categoryName
         }
         
-        if isSameCategoryTitle {
-            // Показываем ошибку, что категория с таким именем уже существует
-            // Можно добавить алерт или другое уведомление пользователя
+        if isSameCategoryTitle { 
+            alertPresenter.showAlert(with: "Ошибка", with: "Данная категория уже есть", show: self)
             return
         }
         

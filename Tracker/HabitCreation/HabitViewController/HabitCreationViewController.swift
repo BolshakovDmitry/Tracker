@@ -147,9 +147,11 @@ final class HabitCreationViewController: UIViewController {
     ]
     
     private var selectedEmojiIndex: IndexPath?
+    private var previousSelectedEmojiIndex: IndexPath? = nil
     private var selectedColorIndex: IndexPath?
     private var selectedCategory: String?
     private var selectedSchedule: Set<WeekDay> = []
+    
     
     // MARK: - Lifecycle
     
@@ -370,7 +372,7 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
         if indexPath.section == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as! EmojiCollectionViewCell
             cell.configure(with: emojis[indexPath.item])
-            cell.isSelected = indexPath == selectedEmojiIndex
+            cell.isSelected = false
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as! ColorCollectionViewCell
@@ -381,29 +383,38 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
         }
     }
     
+    
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
         if indexPath.section == 0 {
             // Выбран эмодзи
-            if let previousSelectedIndex = selectedEmojiIndex {
-                // Снимаем выделение с предыдущей ячейки
-                let cell = collectionView.cellForItem(at: previousSelectedIndex) as? EmojiCollectionViewCell
+            
+            if previousSelectedEmojiIndex == nil{
+                
+                // кривая реализация чтобы сохронялись выделения обеих секций
+                let cell = collectionView.cellForItem(at: indexPath) as? EmojiCollectionViewCell
+                cell?.isSelected = true
+                selectedEmojiIndex = indexPath
+                print(indexPath, selectedEmojiIndex)
+                previousSelectedEmojiIndex = indexPath
+            } else {
+                guard let previousSI = previousSelectedEmojiIndex else { return }
+                let cell = collectionView.cellForItem(at: previousSI) as? EmojiCollectionViewCell
                 cell?.isSelected = false
+                previousSelectedEmojiIndex = indexPath
+                selectedEmojiIndex = indexPath
             }
-            // Устанавливаем выделение на новую ячейку
-            let cell = collectionView.cellForItem(at: indexPath) as? EmojiCollectionViewCell
-            cell?.isSelected = true
-            selectedEmojiIndex = indexPath
         } else {
             // Выбран цвет
-            if let previousSelectedIndex = selectedColorIndex {
-                // Снимаем выделение с предыдущей ячейки
-                let cell = collectionView.cellForItem(at: previousSelectedIndex) as? ColorCollectionViewCell
-                cell?.isSelected = false
-            }
-            // Устанавливаем выделение на новую ячейку
             let cell = collectionView.cellForItem(at: indexPath) as? ColorCollectionViewCell
             cell?.isSelected = true
             selectedColorIndex = indexPath
+            guard let index2 = selectedEmojiIndex else { return }
+            let cell2 = collectionView.cellForItem(at: index2) as? EmojiCollectionViewCell
+            cell2?.isSelected = true
+            print(indexPath, selectedEmojiIndex)
+            
         }
         
         // Проверяем состояние формы после выбора
