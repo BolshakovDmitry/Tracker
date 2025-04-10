@@ -86,8 +86,7 @@ final class TrackerTypesViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func habitButtonTapped() {
-        print("Выбрана привычка")
-        
+      
         // Создаем контроллер создания привычки
         let habitCreationVC = HabitCreationViewController()
         
@@ -102,8 +101,7 @@ final class TrackerTypesViewController: UIViewController {
     }
     
     @objc private func irregularEventButtonTapped() {
-        print("Выбрано нерегулярное событие")
-        
+    
         // Создаем контроллер создания нерегулярного события
         let irregularEventVC = HabitCreationViewController()
         
