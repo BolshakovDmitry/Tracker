@@ -61,6 +61,14 @@ final class HabitCreationViewController: UIViewController {
         return button
     }()
     
+    // Создаем разделительную линию
+    private let separatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0) // Стандартный цвет разделителя
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let scheduleButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Расписание", for: .normal)
@@ -171,6 +179,7 @@ final class HabitCreationViewController: UIViewController {
         view.addSubview(titleLabel)
         view.addSubview(nameTextField)
         view.addSubview(categoryButton)
+        view.addSubview(separatorView) // Добавляем разделитель
         view.addSubview(scheduleButton)
         view.addSubview(collectionView)
         view.addSubview(cancelButton)
@@ -194,8 +203,16 @@ final class HabitCreationViewController: UIViewController {
             categoryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             categoryButton.heightAnchor.constraint(equalToConstant: 75),
             
+            // Добавляем констрейнты для разделителя
+           
+                separatorView.leadingAnchor.constraint(equalTo: categoryButton.leadingAnchor, constant: 16),
+                separatorView.trailingAnchor.constraint(equalTo: categoryButton.trailingAnchor, constant: -16),
+                separatorView.topAnchor.constraint(equalTo: categoryButton.bottomAnchor),
+            separatorView.heightAnchor.constraint(equalToConstant: 1.5), // Стандартная толщина разделителя
+          
+            
             // Расписание
-            scheduleButton.topAnchor.constraint(equalTo: categoryButton.bottomAnchor, constant: 0),
+            scheduleButton.topAnchor.constraint(equalTo: separatorView.bottomAnchor, constant: 0),
             scheduleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             scheduleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             scheduleButton.heightAnchor.constraint(equalToConstant: 75),
@@ -420,6 +437,8 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
         // Проверяем состояние формы после выбора
         updateCreateButtonState()
     }
+    
+    
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {

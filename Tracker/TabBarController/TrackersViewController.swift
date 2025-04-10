@@ -20,6 +20,7 @@ final class TrackersViewController: UIViewController {
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
         picker.tintColor = UIColor(named: "YP Blue")
+        
         return picker
     }()
     
