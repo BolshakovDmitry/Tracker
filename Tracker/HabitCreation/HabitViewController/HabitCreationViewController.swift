@@ -9,10 +9,28 @@ protocol ScheduleSelectionDelegate: AnyObject {
 }
 
 final class HabitCreationViewController: UIViewController {
+    
+    // MARK: - Types
+    
+    // Типы настроек в таблице
+    private enum SettingsType: Int, CaseIterable {
+        case category = 0
+        case schedule = 1
+        
+        var title: String {
+            switch self {
+            case .category:
+                return "Категория"
+            case .schedule:
+                return "Расписание"
+            }
+        }
+    }
 
     // MARK: - public fields
     
     var delegate: habitCreationViewControllerDelegate?
+    var trackerType: TrackerType = .habit
     
     // MARK: - UI Elements
     
@@ -36,62 +54,25 @@ final class HabitCreationViewController: UIViewController {
         return textField
     }()
     
-    private let categoryButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Категория", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.contentHorizontalAlignment = .left
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
-        button.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
-        button.layer.cornerRadius = 10
-        
-        // Добавляем иконку ">"
-        let chevronImage = UIImage(systemName: "chevron.right")
-        let chevronImageView = UIImageView(image: chevronImage)
-        chevronImageView.tintColor = .gray
-        chevronImageView.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(chevronImageView)
-        
-        NSLayoutConstraint.activate([
-            chevronImageView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
-            chevronImageView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
-        ])
-        
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+    // Заменяем отдельные кнопки на TableView
+    private let settingsTableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.isScrollEnabled = false
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
+        tableView.layer.cornerRadius = 10
+        tableView.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
     }()
     
-    // Создаем разделительную линию
-    private let separatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0) // Стандартный цвет разделителя
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private let scheduleButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Расписание", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.contentHorizontalAlignment = .left
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
-        button.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
-        button.layer.cornerRadius = 10
-        
-        // Добавляем иконку ">"
-        let chevronImage = UIImage(systemName: "chevron.right")
-        let chevronImageView = UIImageView(image: chevronImage)
-        chevronImageView.tintColor = .gray
-        chevronImageView.translatesAutoresizingMaskIntoConstraints = false
-        button.addSubview(chevronImageView)
-        
-        NSLayoutConstraint.activate([
-            chevronImageView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
-            chevronImageView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
-        ])
-        
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
+    private let collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .white
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        return collectionView
     }()
     
     private let cancelButton: UIButton = {
@@ -104,17 +85,6 @@ final class HabitCreationViewController: UIViewController {
         button.layer.borderColor = UIColor.red.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
-    }()
-    
-    
-    private let collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .vertical
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .white
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        return collectionView
     }()
     
     private let createButton: UIButton = {
@@ -165,7 +135,12 @@ final class HabitCreationViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Устанавливаем заголовок в зависимости от типа трекера
+        titleLabel.text = trackerType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
+        
         setupUI()
+        setupTableView()
         setupCollectionView()
         setupButtons()
     }
@@ -178,9 +153,7 @@ final class HabitCreationViewController: UIViewController {
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
         view.addSubview(nameTextField)
-        view.addSubview(categoryButton)
-        view.addSubview(separatorView) // Добавляем разделитель
-        view.addSubview(scheduleButton)
+        view.addSubview(settingsTableView)
         view.addSubview(collectionView)
         view.addSubview(cancelButton)
         view.addSubview(createButton)
@@ -197,28 +170,14 @@ final class HabitCreationViewController: UIViewController {
             nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             nameTextField.heightAnchor.constraint(equalToConstant: 75),
             
-            // Категория
-            categoryButton.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
-            categoryButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            categoryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            categoryButton.heightAnchor.constraint(equalToConstant: 75),
-            
-            // Добавляем констрейнты для разделителя
-           
-                separatorView.leadingAnchor.constraint(equalTo: categoryButton.leadingAnchor, constant: 16),
-                separatorView.trailingAnchor.constraint(equalTo: categoryButton.trailingAnchor, constant: -16),
-                separatorView.topAnchor.constraint(equalTo: categoryButton.bottomAnchor),
-            separatorView.heightAnchor.constraint(equalToConstant: 1.5), // Стандартная толщина разделителя
-          
-            
-            // Расписание
-            scheduleButton.topAnchor.constraint(equalTo: separatorView.bottomAnchor, constant: 0),
-            scheduleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            scheduleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            scheduleButton.heightAnchor.constraint(equalToConstant: 75),
+            // TableView для категории и расписания
+            settingsTableView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
+            settingsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            settingsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            settingsTableView.heightAnchor.constraint(equalToConstant: trackerType == .habit ? 150 : 75), // Высота для одной или двух ячеек
             
             // CollectionView
-            collectionView.topAnchor.constraint(equalTo: scheduleButton.bottomAnchor, constant: 32),
+            collectionView.topAnchor.constraint(equalTo: settingsTableView.bottomAnchor, constant: 32),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
@@ -235,6 +194,14 @@ final class HabitCreationViewController: UIViewController {
             createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             createButton.heightAnchor.constraint(equalToConstant: 60)
         ])
+    }
+    
+    private func setupTableView() {
+        settingsTableView.delegate = self
+        settingsTableView.dataSource = self
+        
+        // Регистрируем ячейку
+        settingsTableView.register(SettingsTableViewCell.self, forCellReuseIdentifier: "SettingsCell")
     }
     
     private func setupCollectionView() {
@@ -254,8 +221,6 @@ final class HabitCreationViewController: UIViewController {
     private func setupButtons() {
         createButton.addTarget(self, action: #selector(createButtonTapped), for: .touchUpInside)
         cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
-        categoryButton.addTarget(self, action: #selector(categoryButtonTapped), for: .touchUpInside)
-        scheduleButton.addTarget(self, action: #selector(scheduleButtonTapped), for: .touchUpInside)
         
         // Начальное состояние - неактивное
         updateCreateButtonState()
@@ -268,7 +233,7 @@ final class HabitCreationViewController: UIViewController {
     private func updateCreateButtonState() {
         let isTextValid = (nameTextField.text?.count ?? 0) >= 4
         let isCategorySelected = selectedCategory != nil
-        let isScheduleSelected = !selectedSchedule.isEmpty
+        let isScheduleSelected = trackerType == .irregularEvent || !selectedSchedule.isEmpty
         let isEmojiSelected = selectedEmojiIndex != nil
         let isColorSelected = selectedColorIndex != nil
         
@@ -286,26 +251,26 @@ final class HabitCreationViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func createButtonTapped() {
-        // Проверяем, что все поля заполнены
         guard
             let text = nameTextField.text, !text.isEmpty,
             let emojiIndex = selectedEmojiIndex?.item,
-            let colorIndex = selectedColorIndex?.item,
-            !selectedSchedule.isEmpty // Проверяем, что расписание выбрано
+            let colorIndex = selectedColorIndex?.item
         else {
-            // Здесь можно показать алерт с ошибкой
             print("Необходимо заполнить все поля")
             return
         }
         
         let selectedEmoji = emojis[emojiIndex]
         let selectedColor = colors[colorIndex]
-
+        
+        // Для нерегулярного события устанавливаем пустое расписание
+        let schedule: Set<WeekDay> = trackerType == .habit ? selectedSchedule : []
+        
         // Создаем новую привычку с выбранным расписанием
-        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: selectedSchedule, type: .habit)
+        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
         
         // Здесь будет логика сохранения новой привычки
-        print("Создана новая привычка: \(newTracker)")
+        print("Создан новый трекер: \(newTracker)")
         
         // Используем категорию или "Общее", если категория не выбрана
         delegate?.addTracker(newTracker, to: selectedCategory ?? "Общее")
@@ -349,7 +314,8 @@ final class HabitCreationViewController: UIViewController {
         dismiss(animated: true)
     }
     
-    @objc private func categoryButtonTapped() {
+    // Обработчик нажатия на ячейку категории
+    private func showCategoryViewController() {
         print("Переход к выбору категории")
         let categoryVC = CategoryViewController()
         
@@ -360,7 +326,8 @@ final class HabitCreationViewController: UIViewController {
         present(categoryVC, animated: true)
     }
     
-    @objc private func scheduleButtonTapped() {
+    // Обработчик нажатия на ячейку расписания
+    private func showScheduleViewController() {
         print("Переход к настройке расписания")
         // Создаем экземпляр нового контроллера
         let scheduleVC = ScheduleViewController()
@@ -370,6 +337,67 @@ final class HabitCreationViewController: UIViewController {
         scheduleVC.modalPresentationStyle = .pageSheet
         // Показываем экран выбора расписания
         present(scheduleVC, animated: true)
+    }
+}
+
+// MARK: - UITableViewDelegate, UITableViewDataSource
+
+extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if trackerType == .habit {
+            return SettingsType.allCases.count
+        } else {
+            // Для нерегулярного события показываем только категорию
+            return 1
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as! SettingsTableViewCell
+        
+        // Для нерегулярного события всегда показываем только категорию
+        let settingsTypeIndex = trackerType == .habit ? indexPath.row : SettingsType.category.rawValue
+        
+        guard let settingsType = SettingsType(rawValue: settingsTypeIndex) else {
+            return UITableViewCell()
+        }
+        
+        var value: String?
+        
+        switch settingsType {
+        case .category:
+            value = selectedCategory
+        case .schedule:
+            if !selectedSchedule.isEmpty {
+                value = formattedSchedule(selectedSchedule)
+            }
+        }
+        
+        cell.configure(with: settingsType.title, value: value)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        // Для нерегулярного события всегда обрабатываем как категорию
+        let settingsTypeIndex = trackerType == .habit ? indexPath.row : SettingsType.category.rawValue
+        
+        guard let settingsType = SettingsType(rawValue: settingsTypeIndex) else {
+            return
+        }
+        
+        switch settingsType {
+        case .category:
+            showCategoryViewController()
+        case .schedule:
+            showScheduleViewController()
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75 // Высота каждой ячейки
     }
 }
 
@@ -400,14 +428,12 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
         }
     }
     
-    
-    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
         if indexPath.section == 0 {
             // Выбран эмодзи
             
-            if previousSelectedEmojiIndex == nil{
+            if previousSelectedEmojiIndex == nil {
                 
                 // кривая реализация чтобы сохронялись выделения обеих секций
                 let cell = collectionView.cellForItem(at: indexPath) as? EmojiCollectionViewCell
@@ -437,8 +463,6 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
         // Проверяем состояние формы после выбора
         updateCreateButtonState()
     }
-    
-    
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {
@@ -514,8 +538,9 @@ extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
 
 extension HabitCreationViewController: CategorySelectionDelegate {
     func didSelectCategory(_ category: String) {
-        categoryButton.setTitle(category, for: .normal)
         selectedCategory = category
+        // Обновляем отображение в таблице
+        settingsTableView.reloadRows(at: [IndexPath(row: SettingsType.category.rawValue, section: 0)], with: .none)
         updateCreateButtonState()
     }
 }
@@ -525,15 +550,10 @@ extension HabitCreationViewController: ScheduleSelectionDelegate {
         // Сохраняем выбранное расписание
         selectedSchedule = schedule
         
-        // Обновляем текст на кнопке расписания
-        if !schedule.isEmpty {
-            // Показываем выбранные дни в компактном формате
-            scheduleButton.setTitle(formattedSchedule(schedule), for: .normal)
-        } else {
-            // Возвращаем стандартный текст, если ничего не выбрано
-            scheduleButton.setTitle("Расписание", for: .normal)
-        }
+        // Обновляем отображение в таблице
+        settingsTableView.reloadRows(at: [IndexPath(row: SettingsType.schedule.rawValue, section: 0)], with: .none)
         
         updateCreateButtonState()
     }
 }
+
