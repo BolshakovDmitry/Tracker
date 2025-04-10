@@ -212,7 +212,7 @@ final class HabitCreationViewController: UIViewController {
         collectionView.register(EmojiCollectionViewCell.self, forCellWithReuseIdentifier: "EmojiCell")
         collectionView.register(ColorCollectionViewCell.self, forCellWithReuseIdentifier: "ColorCell")
         collectionView.register(
-            HeaderView.self,
+            TrackerHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: "HeaderView"
         )
@@ -439,7 +439,6 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
                 let cell = collectionView.cellForItem(at: indexPath) as? EmojiCollectionViewCell
                 cell?.isSelected = true
                 selectedEmojiIndex = indexPath
-                print(indexPath, selectedEmojiIndex)
                 previousSelectedEmojiIndex = indexPath
             } else {
                 guard let previousSI = previousSelectedEmojiIndex else { return }
@@ -456,7 +455,6 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
             guard let index2 = selectedEmojiIndex else { return }
             let cell2 = collectionView.cellForItem(at: index2) as? EmojiCollectionViewCell
             cell2?.isSelected = true
-            print(indexPath, selectedEmojiIndex)
             
         }
         
@@ -470,7 +468,7 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
                 ofKind: kind,
                 withReuseIdentifier: "HeaderView",
                 for: indexPath
-            ) as! HeaderView
+            ) as! TrackerHeaderView
             
             let title = indexPath.section == 0 ? "Emoji" : "Цвет"
             headerView.configure(with: title)

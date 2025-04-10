@@ -37,6 +37,20 @@
 			);
 			target = F42483DF2D95D161008E4D52 /* Tracker */;
 		};
+		F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HabitCreation/Schedule/ScheduleViewController.swift,
+			);
+			target = F42483F52D95D162008E4D52 /* TrackerTests */;
+		};
+		F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HabitCreation/Schedule/ScheduleViewController.swift,
+			);
+			target = F42483FF2D95D162008E4D52 /* TrackerUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +58,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F42484082D95D162008E4D52 /* Exceptions for "Tracker" folder in "Tracker" target */,
+				F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerTests" target */,
+				F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerUITests" target */,
 			);
 			path = Tracker;
 			sourceTree = "<group>";
