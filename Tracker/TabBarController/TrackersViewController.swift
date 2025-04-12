@@ -10,6 +10,7 @@ final class TrackersViewController: UIViewController {
     
     private var dataManager = DataManager.shared
     
+    
     // Выполненные трекеры
     var completedTrackers: [TrackerRecord] = []
     
@@ -358,20 +359,37 @@ extension TrackersViewController: UITextFieldDelegate {
 
 extension TrackersViewController: TrackerCellDelegate {
     func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
-        
-        if isComplete {
-            let newTracker = TrackerRecord(id: id, date: datePicker.date)
-            completedTrackers.append(newTracker)
-            trackersCollectionView.reloadItems(at: [indexPath])
-        } else {
-            completedTrackers.removeAll { trackerRecord in
-                let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-                return trackerRecord.id == id && isSameDay
-            }
-            trackersCollectionView.reloadItems(at: [indexPath])
-        }
-        
-    }
+        // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
+                let calendar = Calendar.current
+                let today = Date()
+                
+                // Сравниваем даты с помощью Calendar
+                // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
+                let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
+                
+                if comparison == .orderedDescending {
+               
+               AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
+               // Если дата в будущем, показываем предупреждение и отменяем действие
+               
+               // Перезагружаем ячейку, чтобы вернуть её в предыдущее состояние
+               trackersCollectionView.reloadItems(at: [indexPath])
+               return
+           }
+           
+           // Если дата не в будущем, обрабатываем обычным образом
+           if isComplete {
+               let newTracker = TrackerRecord(id: id, date: datePicker.date)
+               completedTrackers.append(newTracker)
+               trackersCollectionView.reloadItems(at: [indexPath])
+           } else {
+               completedTrackers.removeAll { trackerRecord in
+                   let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+                   return trackerRecord.id == id && isSameDay
+               }
+               trackersCollectionView.reloadItems(at: [indexPath])
+           }
+       }
 }
 
 
