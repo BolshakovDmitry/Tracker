@@ -2,7 +2,7 @@ import UIKit
 
 // MARK: - ColorCollectionViewCell
 
-class ColorCollectionViewCell: UICollectionViewCell {
+final class ColorCollectionViewCell: UICollectionViewCell {
     
     override var isSelected: Bool {
         didSet {

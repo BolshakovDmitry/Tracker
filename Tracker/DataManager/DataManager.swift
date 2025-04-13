@@ -1,6 +1,6 @@
 import UIKit
 
-class DataManager {
+final class DataManager {
     
     static let shared = DataManager()
     

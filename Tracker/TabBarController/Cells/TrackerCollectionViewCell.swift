@@ -4,7 +4,7 @@ import UIKit
 protocol TrackerCellDelegate: AnyObject {
     func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath)
 }
-class TrackerCollectionViewCell: UICollectionViewCell {
+final class TrackerCollectionViewCell: UICollectionViewCell {
     // Элементы интерфейса ячейки (эмодзи, название, цвет и т.д.)
     private let containerView: UIView = {
         let view = UIView()
@@ -132,7 +132,7 @@ class TrackerCollectionViewCell: UICollectionViewCell {
                 dayCountLabel.text = "\(daysCompleted) дней"
             }
         
-        let image: Void = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
+        let _: Void = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
         
     }
 }

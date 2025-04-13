@@ -1,6 +1,6 @@
 import UIKit
 
-class TrackerHeaderView: UICollectionReusableView {
+final class TrackerHeaderView: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 19, weight: .bold)

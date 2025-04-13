@@ -1,8 +1,4 @@
-import Foundation
 import UIKit
-
-import UIKit
-import Foundation
 
 // Перечисление для определения типа трекера
 enum TrackerType {

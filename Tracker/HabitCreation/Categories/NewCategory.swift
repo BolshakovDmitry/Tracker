@@ -115,8 +115,8 @@ final class NewCategory: UIViewController {
         }
         
         // Проверяем, существует ли категория с таким же названием
-        let isSameCategoryTitle = dataManager.categories.reduce(false) { результат, категория in
-            return результат || категория.title == categoryName
+        let isSameCategoryTitle = dataManager.categories.reduce(false) { result, category in
+            return result || category.title == categoryName
         }
         
         if isSameCategoryTitle { 

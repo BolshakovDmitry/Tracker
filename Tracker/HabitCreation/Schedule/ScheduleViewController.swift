@@ -40,11 +40,11 @@ final class ScheduleViewController: UIViewController {
     }()
     
     override func viewDidLoad() {
-         super.viewDidLoad()
-         setupUI()
-         setupTableView()
-         setupActions()
-     }
+        super.viewDidLoad()
+        setupUI()
+        setupTableView()
+        setupActions()
+    }
     
     // Настройка пользовательского интерфейса
     private func setupUI() {
@@ -100,40 +100,40 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "DaySelectionCell", for: indexPath) as! DaySelectionCell
-                
-                // Получаем день недели для текущей строки
-                let weekDay = WeekDay.allCases[indexPath.row]
-                // Проверяем, выбран ли этот день
-                let isSelected = selectedDays.contains(weekDay)
-                
-                // Настраиваем ячейку с названием дня и состоянием переключателя
-                cell.configure(with: weekDay.localizedName, isSelected: isSelected)
-                
-                return cell
+        
+        // Получаем день недели для текущей строки
+        let weekDay = WeekDay.allCases[indexPath.row]
+        // Проверяем, выбран ли этот день
+        let isSelected = selectedDays.contains(weekDay)
+        
+        // Настраиваем ячейку с названием дня и состоянием переключателя
+        cell.configure(with: weekDay.localizedName, isSelected: isSelected)
+        
+        return cell
     }
     
     // Обработка нажатия на строку таблицы
-        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            tableView.deselectRow(at: indexPath, animated: true)
-            
-            // Получаем выбранный день недели
-            let weekDay = WeekDay.allCases[indexPath.row]
-            
-            // Если день уже был выбран - убираем его из списка, иначе добавляем
-            if selectedDays.contains(weekDay) {
-                selectedDays.remove(weekDay)
-            } else {
-                selectedDays.insert(weekDay)
-            }
-            
-            // Обновляем вид ячейки
-            tableView.reloadRows(at: [indexPath], with: .automatic)
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        // Получаем выбранный день недели
+        let weekDay = WeekDay.allCases[indexPath.row]
+        
+        // Если день уже был выбран - убираем его из списка, иначе добавляем
+        if selectedDays.contains(weekDay) {
+            selectedDays.remove(weekDay)
+        } else {
+            selectedDays.insert(weekDay)
         }
         
-        // Высота строки в таблице
-        func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            return 75
-        }
+        // Обновляем вид ячейки
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+    }
+    
+    // Высота строки в таблице
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
+    }
     
 }
 

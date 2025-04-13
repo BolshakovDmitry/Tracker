@@ -88,35 +88,19 @@ final class TrackerTypesViewController: UIViewController {
     @objc private func habitButtonTapped() {
         print("Выбрана привычка")
         
-        // Создаем контроллер создания привычки
         let habitCreationVC = HabitCreationViewController()
-        
-        // Устанавливаем делегат из сохраненной ссылки
         habitCreationVC.delegate = trackerViewControllerDelegate
-        
-        // Настраиваем модальное представление
         habitCreationVC.modalPresentationStyle = .pageSheet
         
-        // Показываем контроллер создания привычки
         present(habitCreationVC, animated: true, completion: nil)
     }
     
     @objc private func irregularEventButtonTapped() {
         print("Выбрано нерегулярное событие")
-        
-        // Создаем контроллер создания нерегулярного события
         let irregularEventVC = HabitCreationViewController()
-        
-        // Устанавливаем тип трекера как нерегулярное событие
         irregularEventVC.trackerType = .irregularEvent
-        
-        // Устанавливаем делегат из сохраненной ссылки
         irregularEventVC.delegate = trackerViewControllerDelegate
-        
-        // Настраиваем модальное представление
         irregularEventVC.modalPresentationStyle = .pageSheet
-        
-        // Показываем контроллер создания нерегулярного события
         present(irregularEventVC, animated: true, completion: nil)
     }
 }

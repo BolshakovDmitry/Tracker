@@ -1,6 +1,6 @@
 import UIKit
 
-class SettingsTableViewCell: UITableViewCell {
+final class SettingsTableViewCell: UITableViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()

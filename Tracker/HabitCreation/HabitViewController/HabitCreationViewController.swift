@@ -14,8 +14,8 @@ final class HabitCreationViewController: UIViewController {
     
     // Типы настроек в таблице
     private enum SettingsType: Int, CaseIterable {
-        case category = 0
-        case schedule = 1
+        case category
+        case schedule 
         
         var title: String {
             switch self {
@@ -329,13 +329,11 @@ final class HabitCreationViewController: UIViewController {
     // Обработчик нажатия на ячейку расписания
     private func showScheduleViewController() {
         print("Переход к настройке расписания")
-        // Создаем экземпляр нового контроллера
+        
         let scheduleVC = ScheduleViewController()
-        // Устанавливаем текущий класс как делегат
         scheduleVC.delegate = self
-        // Задаем стиль представления
         scheduleVC.modalPresentationStyle = .pageSheet
-        // Показываем экран выбора расписания
+        
         present(scheduleVC, animated: true)
     }
 }
@@ -345,21 +343,16 @@ final class HabitCreationViewController: UIViewController {
 extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if trackerType == .habit {
-            return SettingsType.allCases.count
-        } else {
-            // Для нерегулярного события показываем только категорию
-            return 1
-        }
+        trackerType == .habit ? SettingsType.allCases.count : 1
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as! SettingsTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as? SettingsTableViewCell
         
         // Для нерегулярного события всегда показываем только категорию
         let settingsTypeIndex = trackerType == .habit ? indexPath.row : SettingsType.category.rawValue
         
-        guard let settingsType = SettingsType(rawValue: settingsTypeIndex) else {
+        guard let settingsType = SettingsType(rawValue: settingsTypeIndex), let cell = cell else {
             return UITableViewCell()
         }
         
@@ -373,6 +366,8 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
                 value = formattedSchedule(selectedSchedule)
             }
         }
+        
+        
         
         cell.configure(with: settingsType.title, value: value)
         return cell
@@ -415,12 +410,16 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as! EmojiCollectionViewCell
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiCollectionViewCell else {
+                return UICollectionViewCell()
+            }
             cell.configure(with: emojis[indexPath.item])
             cell.isSelected = false
             return cell
         } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as! ColorCollectionViewCell
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as? ColorCollectionViewCell else {
+                return UICollectionViewCell()
+            }
             
             cell.configure(with: colors[indexPath.item])
             cell.isSelected = indexPath == selectedColorIndex
