@@ -5,7 +5,7 @@ final class ScheduleViewController: UIViewController {
     // MARK: - Properties
     weak var delegate: ScheduleSelectionDelegate?
     
-    private var selectedDays: Set<WeekDay> = []
+    private var selectedDays: [WeekDay] = []
     
     // Заголовок экрана
     private let titleLabel: UILabel = {
@@ -120,10 +120,10 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
         let weekDay = WeekDay.allCases[indexPath.row]
         
         // Если день уже был выбран - убираем его из списка, иначе добавляем
-        if selectedDays.contains(weekDay) {
-            selectedDays.remove(weekDay)
+        if let index = selectedDays.firstIndex(of: weekDay) {
+            selectedDays.remove(at: index)
         } else {
-            selectedDays.insert(weekDay)
+            selectedDays.append(weekDay)
         }
         
         // Обновляем вид ячейки

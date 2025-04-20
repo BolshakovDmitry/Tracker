@@ -29,14 +29,14 @@ final class DataManager {
                     name: "Бег по утрам",
                     color: UIColor(red: 0.2, green: 0.81, blue: 0.41, alpha: 1.0),
                     emoji: "🏃‍♂️",
-                    schedule: Set([.monday, .wednesday, .friday]),
+                    schedule: [.monday, .wednesday, .friday],
                     type: .habit
                 ),
                 Tracker(
                     name: "Отжимания",
                     color: UIColor(red: 0.51, green: 0.17, blue: 0.94, alpha: 1.0),
                     emoji: "💪",
-                    schedule: Set([.tuesday, .thursday, .saturday]),
+                    schedule: [.tuesday, .thursday, .saturday],
                     type: .habit
                 )
             ]
@@ -50,14 +50,14 @@ final class DataManager {
                     name: "Чтение книг",
                     color: UIColor(red: 0.47, green: 0.58, blue: 0.96, alpha: 1.0),
                     emoji: "📚",
-                    schedule: Set(WeekDay.allCases), // Ежедневно
+                    schedule: [.monday, .wednesday,], // Ежедневно
                     type: .habit
                 ),
                 Tracker(
                     name: "Медитация",
                     color: UIColor(red: 1.00, green: 0.60, blue: 0.80, alpha: 1.0),
                     emoji: "🧘‍♂️",
-                    schedule: Set([.monday, .wednesday, .friday, .sunday]),
+                    schedule: [.monday, .wednesday, .friday, .sunday],
                     type: .habit
                 )
             ]

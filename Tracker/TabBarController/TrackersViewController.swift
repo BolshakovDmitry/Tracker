@@ -288,7 +288,6 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         let tracker = dataManager.visibleCategories[indexPath.section].trackers[indexPath.item]
 
-        
         let isCompleted = checkIsCompletedToday(id: tracker.id)
         
         cell.delegate = self

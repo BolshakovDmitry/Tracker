@@ -2,7 +2,7 @@
 import Foundation
 
 // Структура для хранения дней недели
-enum WeekDay: Int, CaseIterable, Hashable {
+public enum WeekDay: Int, CaseIterable, Hashable {
     case monday = 1
     case tuesday = 2
     case wednesday = 3

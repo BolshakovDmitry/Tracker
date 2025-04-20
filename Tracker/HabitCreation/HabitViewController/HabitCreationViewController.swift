@@ -5,7 +5,11 @@ protocol HabitCreationViewControllerProtocol: AnyObject {
 }
 
 protocol ScheduleSelectionDelegate: AnyObject {
-    func didSelectSchedule(_ schedule: Set<WeekDay>)
+    func didSelectSchedule(_ schedule: [WeekDay])
+}
+
+protocol HabitCreationViewControllerDelegate: AnyObject {
+    func didCreateTracker(tracker: Tracker, category: String)
 }
 
 final class HabitCreationViewController: UIViewController {
@@ -15,7 +19,7 @@ final class HabitCreationViewController: UIViewController {
     // Типы настроек в таблице
     private enum SettingsType: Int, CaseIterable {
         case category
-        case schedule 
+        case schedule
         
         var title: String {
             switch self {
@@ -26,10 +30,11 @@ final class HabitCreationViewController: UIViewController {
             }
         }
     }
-
+    
     // MARK: - public fields
     
     var delegate: habitCreationViewControllerDelegate?
+    var delegateTrackerCoreData: HabitCreationViewControllerDelegate?
     var trackerType: TrackerType = .habit
     
     // MARK: - UI Elements
@@ -128,7 +133,7 @@ final class HabitCreationViewController: UIViewController {
     private var previousSelectedEmojiIndex: IndexPath? = nil
     private var selectedColorIndex: IndexPath?
     private var selectedCategory: String?
-    private var selectedSchedule: Set<WeekDay> = []
+    private var selectedSchedule: [WeekDay] = []
     
     
     // MARK: - Lifecycle
@@ -248,7 +253,7 @@ final class HabitCreationViewController: UIViewController {
         updateCreateButtonState()
     }
     
-    // MARK: - Actions
+    // MARK: - Actions + Создание привычки
     
     @objc private func createButtonTapped() {
         guard
@@ -264,10 +269,12 @@ final class HabitCreationViewController: UIViewController {
         let selectedColor = colors[colorIndex]
         
         // Для нерегулярного события устанавливаем пустое расписание
-        let schedule: Set<WeekDay> = trackerType == .habit ? selectedSchedule : []
+        let schedule = trackerType == .habit ? selectedSchedule : []
         
         // Создаем новую привычку с выбранным расписанием
         let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
+        
+        delegateTrackerCoreData?.didCreateTracker(tracker: newTracker, category: selectedCategory ?? "No category")
         
         // Здесь будет логика сохранения новой привычки
         print("Создан новый трекер: \(newTracker)")
@@ -285,7 +292,7 @@ final class HabitCreationViewController: UIViewController {
     }
     
     // Метод для форматирования дней недели для отображения на кнопке
-    private func formattedSchedule(_ weekDays: Set<WeekDay>) -> String {
+    private func formattedSchedule(_ weekDays: [WeekDay]) -> String {
         // Если выбраны все 7 дней, показываем "Каждый день"
         if weekDays.count == 7 {
             return "Каждый день"
@@ -318,8 +325,10 @@ final class HabitCreationViewController: UIViewController {
     private func showCategoryViewController() {
         print("Переход к выбору категории")
         let categoryVC = CategoryViewController()
+        let trackerCategoryStore = TrackerCategoryStore(delegate: categoryVC)
         
         categoryVC.delegate = self
+        categoryVC.delegateCoreData = trackerCategoryStore
         
         categoryVC.modalPresentationStyle = .pageSheet
         
@@ -543,7 +552,7 @@ extension HabitCreationViewController: CategorySelectionDelegate {
 }
 
 extension HabitCreationViewController: ScheduleSelectionDelegate {
-    func didSelectSchedule(_ schedule: Set<WeekDay>) {
+    func didSelectSchedule(_ schedule: [WeekDay]) {
         // Сохраняем выбранное расписание
         selectedSchedule = schedule
         

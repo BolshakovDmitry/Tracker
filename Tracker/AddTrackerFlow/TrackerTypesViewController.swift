@@ -90,6 +90,7 @@ final class TrackerTypesViewController: UIViewController {
         
         let habitCreationVC = HabitCreationViewController()
         habitCreationVC.delegate = trackerViewControllerDelegate
+        habitCreationVC.delegateTrackerCoreData = TrackerRecordStore()
         habitCreationVC.modalPresentationStyle = .pageSheet
         
         present(habitCreationVC, animated: true, completion: nil)
