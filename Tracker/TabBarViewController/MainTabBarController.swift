@@ -23,6 +23,8 @@ final class MainTabBarController: UITabBarController {
     private func setupViewControllers() {
         // Создаем контроллер для вкладки "Трекеры"
         let trackersVC = TrackersViewController()
+        let trackerStore = TrackerStore(delegate: trackersVC)
+        trackersVC.delegateCoreData = trackerStore
         let trackersNavController = UINavigationController(rootViewController: trackersVC)
         trackersNavController.tabBarItem = UITabBarItem(
             title: "Трекеры",

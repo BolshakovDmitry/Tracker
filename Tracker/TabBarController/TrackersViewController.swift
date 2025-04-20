@@ -9,7 +9,7 @@ final class TrackersViewController: UIViewController {
     // MARK: - public fields
     
     private var dataManager = DataManager.shared
-    
+    var delegateCoreData: TrackerStoreProtocol?
     
     // Выполненные трекеры
     var completedTrackers: [TrackerRecord] = []
@@ -93,7 +93,7 @@ final class TrackersViewController: UIViewController {
             placeholderImageView.isHidden = false
         }
     }
-        
+    
     // MARK: - Setup UI
     
     private func setupUI() {
@@ -113,8 +113,8 @@ final class TrackersViewController: UIViewController {
         NSLayoutConstraint.activate([
             placeholderImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-           // placeholderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-           // placeholderImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            // placeholderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            // placeholderImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         NSLayoutConstraint.activate([
             trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
@@ -131,7 +131,7 @@ final class TrackersViewController: UIViewController {
     private func reloadTableWithActualDayTrackers() {
         dateChanged(datePicker)
     }
-        
+    
     private func setupNavigationBar() {
         // Настраиваем заголовок
         title = "Трекеры"
@@ -156,7 +156,7 @@ final class TrackersViewController: UIViewController {
     
     @objc private func addButtonTapped() {
         // Создаем новый экран выбора типа трекера
-        let trackerTypesVC = TrackerTypesViewController()
+        let trackerTypesVC = TrackerTypesViewController(delegate: delegateCoreData)
         
         // Устанавливаем себя в качестве делегата для нового экрана
         trackerTypesVC.trackerViewControllerDelegate = self
@@ -174,7 +174,7 @@ final class TrackersViewController: UIViewController {
         
         filterTrackers(by: chosenDay)
     }
-
+    
     // Добавьте отдельный метод для фильтрации:
     private func filterTrackers(by weekday: Int, searchText: String? = nil) {
         
@@ -218,8 +218,8 @@ final class TrackersViewController: UIViewController {
         })
     }
     
-    
 }
+
 
 // MARK: - habitCreationViewControllerDelegate
 
@@ -276,28 +276,30 @@ extension TrackersViewController: habitCreationViewControllerDelegate {
 // MARK: - UICollectionViewDataSource
 extension TrackersViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return dataManager.visibleCategories.count
+        return delegateCoreData?.numberOfSections ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return dataManager.visibleCategories[section].trackers.count
+        return delegateCoreData?.numberOfRowsInSection(section) ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as! TrackerCollectionViewCell
         
-        let tracker = dataManager.visibleCategories[indexPath.section].trackers[indexPath.item]
-
-        let isCompleted = checkIsCompletedToday(id: tracker.id)
-        
-        cell.delegate = self
-        
-        let daysCompleted = completedTrackers.filter { currentTracker in
-            currentTracker.id == tracker.id
-        }.count
-        
-        cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
-    
+        if let tracker = delegateCoreData?.object(at: indexPath) {
+            
+            let isCompleted = false //checkIsCompletedToday(id: tracker.id)
+            
+            cell.delegate = self
+            
+            let daysCompleted = 0 //completedTrackers.filter { currentTracker in
+            // currentTracker.id == tracker.id
+            // }.count
+            
+            cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
+            
+            return cell
+        }
         return cell
     }
     
@@ -306,7 +308,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         completedTrackers.contains { trackerRecord in
             let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-             return trackerRecord.id == id && isSameDay
+            return trackerRecord.id == id && isSameDay
         }
     }
     
@@ -318,77 +320,109 @@ extension TrackersViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! TrackerHeaderView
             
-            headerView.configure(with: dataManager.visibleCategories[indexPath.section].title)
+            // Получаем название секции из delegateCoreData
+            if let sectionTitle = delegateCoreData?.sectionTitle(for: indexPath.section) {
+                headerView.configure(with: sectionTitle)
+            } else {
+                // Запасной вариант, если метод не реализован или вернул nil
+                headerView.configure(with: "Секция \(indexPath.section + 1)")
+            }
+            
             return headerView
         }
         
         return UICollectionReusableView()
     }
+    
 }
-
-// MARK: - UICollectionViewDelegateFlowLayout
-extension TrackersViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.frame.width - 9) / 2
-        return CGSize(width: width, height: 148)
+    
+    // MARK: - UICollectionViewDelegateFlowLayout
+    extension TrackersViewController: UICollectionViewDelegateFlowLayout {
+        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+            let width = (collectionView.frame.width - 9) / 2
+            return CGSize(width: width, height: 148)
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+            return CGSize(width: collectionView.frame.width, height: 46)
+        }
+        
+        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+            return UIEdgeInsets(top: 12, left: 0, bottom: 16, right: 0)
+        }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 46)
+    // MARK: - UITextFieldSearchDelegate
+    
+    extension TrackersViewController: UITextFieldDelegate {
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            
+            let calendar = Calendar.current
+            let chosenDay = calendar.component(.weekday, from: datePicker.date)
+            
+            filterTrackers(by: chosenDay, searchText: textField.text)
+            return true
+        }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 12, left: 0, bottom: 16, right: 0)
-    }
-}
-
-// MARK: - UITextFieldSearchDelegate
-
-extension TrackersViewController: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        
-        let calendar = Calendar.current
-        let chosenDay = calendar.component(.weekday, from: datePicker.date)
-        
-        filterTrackers(by: chosenDay, searchText: textField.text)
-        return true
-    }
-}
-
-extension TrackersViewController: TrackerCellDelegate {
-    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
-        // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
-                let calendar = Calendar.current
-                let today = Date()
+    extension TrackersViewController: TrackerCellDelegate {
+        func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
+            // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
+            let calendar = Calendar.current
+            let today = Date()
+            
+            // Сравниваем даты с помощью Calendar
+            // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
+            let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
+            
+            if comparison == .orderedDescending {
                 
-                // Сравниваем даты с помощью Calendar
-                // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
-                let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
+                AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
+                // Если дата в будущем, показываем предупреждение и отменяем действие
                 
-                if comparison == .orderedDescending {
-               
-               AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
-               // Если дата в будущем, показываем предупреждение и отменяем действие
-               
-               // Перезагружаем ячейку, чтобы вернуть её в предыдущее состояние
-               trackersCollectionView.reloadItems(at: [indexPath])
-               return
-           }
-           
-           // Если дата не в будущем, обрабатываем обычным образом
-           if isComplete {
-               let newTracker = TrackerRecord(id: id, date: datePicker.date)
-               completedTrackers.append(newTracker)
-               trackersCollectionView.reloadItems(at: [indexPath])
-           } else {
-               completedTrackers.removeAll { trackerRecord in
-                   let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-                   return trackerRecord.id == id && isSameDay
-               }
-               trackersCollectionView.reloadItems(at: [indexPath])
-           }
-       }
-}
-
+                // Перезагружаем ячейку, чтобы вернуть её в предыдущее состояние
+                trackersCollectionView.reloadItems(at: [indexPath])
+                return
+            }
+            
+            // Если дата не в будущем, обрабатываем обычным образом
+            if isComplete {
+                let newTracker = TrackerRecord(id: id, date: datePicker.date)
+                completedTrackers.append(newTracker)
+                trackersCollectionView.reloadItems(at: [indexPath])
+            } else {
+                completedTrackers.removeAll { trackerRecord in
+                    let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+                    return trackerRecord.id == id && isSameDay
+                }
+                trackersCollectionView.reloadItems(at: [indexPath])
+            }
+        }
+    }
+    
+    extension TrackersViewController: TrackerStoreDelegate {
+        func didUpdate(category: TrackerUpdate) {
+            trackersCollectionView.performBatchUpdates {
+                // Обновление секций
+                if !category.insertedSections.isEmpty {
+                    trackersCollectionView.insertSections(category.insertedSections)
+                }
+                
+                if !category.deletedSections.isEmpty {
+                    trackersCollectionView.deleteSections(category.deletedSections)
+                }
+                
+                // Обновление элементов внутри секций
+                if !category.insertedIndexPaths.isEmpty {
+                    trackersCollectionView.insertItems(at: category.insertedIndexPaths)
+                }
+                
+                if !category.deletedIndexPaths.isEmpty {
+                    trackersCollectionView.deleteItems(at: category.deletedIndexPaths)
+                }
+            }
+        }
+        
+    }
 

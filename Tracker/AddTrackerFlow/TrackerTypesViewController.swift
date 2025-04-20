@@ -2,9 +2,20 @@ import UIKit
 
 final class TrackerTypesViewController: UIViewController {
     
+    private var delegateCoreData: TrackerStoreProtocol?
+    
+    init(delegate: TrackerStoreProtocol?) {
+        self.delegateCoreData = delegate
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     // MARK: - Public fields
     
     weak var trackerViewControllerDelegate: habitCreationViewControllerDelegate?
+    
     
     // MARK: - UI Elements
     
@@ -88,9 +99,10 @@ final class TrackerTypesViewController: UIViewController {
     @objc private func habitButtonTapped() {
         print("Выбрана привычка")
         
+
         let habitCreationVC = HabitCreationViewController()
         habitCreationVC.delegate = trackerViewControllerDelegate
-        habitCreationVC.delegateTrackerCoreData = TrackerStore()
+        habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
         habitCreationVC.modalPresentationStyle = .pageSheet
         
         present(habitCreationVC, animated: true, completion: nil)
