@@ -17,6 +17,7 @@ protocol TrackerStoreProtocol {
     func numberOfRowsInSection(_ section: Int) -> Int
     func object(at: IndexPath) -> Tracker?
     func sectionTitle(for section: Int) -> String?
+    func filterCategories(by weekday: Int, searchText: String?)
 }
 
 class TrackerStore: NSObject {
@@ -30,6 +31,15 @@ class TrackerStore: NSObject {
     private weak var delegate: TrackerStoreDelegate?
     private let context: NSManagedObjectContext
     
+    // Все категории и трекеры
+    private(set) var categories: [TrackerCategory] = []
+    // Отфильтрованные категории и трекеры (по текущему дню)
+    private(set) var visibleCategories: [TrackerCategory] = []
+    
+    // Текущий день недели для фильтрации
+    private var currentWeekday: Int = Calendar.current.component(.weekday, from: Date())
+    private var currentSearchText: String?
+    
     // MARK: - Initialization
     
     convenience init(delegate: TrackerStoreDelegate) {
@@ -41,6 +51,92 @@ class TrackerStore: NSObject {
         self.context = context
         self.delegate = delegate
         super.init()
+        
+        // При инициализации загружаем все категории и фильтруем по текущему дню
+        loadAllCategories()
+        filterVisibleCategories()
+    }
+    
+    // MARK: - Data Loading
+    
+    private func loadAllCategories() {
+        let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
+        do {
+            let categoriesCoreData = try context.fetch(fetchRequest)
+            categories = convertCDToCategories(categoriesCoreData)
+        } catch {
+            print("Ошибка при загрузке категорий: \(error)")
+        }
+    }
+    
+    private func convertCDToCategories(_ categoriesCD: [TrackerCategoryCoreData]) -> [TrackerCategory] {
+        return categoriesCD.compactMap { categoryCD in
+            guard let title = categoryCD.title else { return nil }
+            
+            // Получаем трекеры из категории
+            let trackersCD = categoryCD.trackers?.allObjects as? [TrackerCoreData] ?? []
+            let trackers = trackersCD.compactMap { trackerCD -> Tracker? in
+                guard let id = trackerCD.id,
+                      let name = trackerCD.name,
+                      let color = trackerCD.color,
+                      let emoji = trackerCD.emojii,
+                      let scheduleString = trackerCD.schedule else { return nil }
+                
+                let schedule = convertCoreDataToSchedule(stringSchedule: scheduleString)
+                let trackerColor = hexStringToColor(hex: color) ?? .gray
+                
+                return Tracker(id: id, name: name, color: trackerColor, emoji: emoji, schedule: schedule, type: .habit)
+            }
+            
+            return TrackerCategory(title: title, trackers: trackers)
+        }
+    }
+    
+    // MARK: - Filtering
+    
+    func filterCategories(by weekday: Int, searchText: String? = nil) {
+        currentWeekday = weekday
+        currentSearchText = searchText
+        filterVisibleCategories()
+        
+        // Уведомляем делегат о необходимости обновить UI
+        let update = TrackerUpdate(
+            insertedSections: IndexSet(0..<visibleCategories.count),
+            deletedSections: IndexSet(),
+            insertedIndexPaths: [],
+            deletedIndexPaths: []
+        )
+        delegate?.didUpdate(category: update)
+    }
+    
+    private func filterVisibleCategories() {
+        if currentSearchText == nil || currentSearchText?.isEmpty == true {
+            // Фильтрация только по дню недели
+            visibleCategories = categories.map { category in
+                TrackerCategory(
+                    title: category.title,
+                    trackers: category.trackers.filter { tracker in
+                        tracker.schedule.contains { weekDay in
+                            weekDay.numberValue == currentWeekday
+                        }
+                    }
+                )
+            }.filter { !$0.trackers.isEmpty }
+        } else {
+            // Фильтрация по дню недели и тексту поиска
+            visibleCategories = categories.map { category in
+                TrackerCategory(
+                    title: category.title,
+                    trackers: category.trackers.filter { tracker in
+                        let matchesWeekday = tracker.schedule.contains { weekDay in
+                            weekDay.numberValue == currentWeekday
+                        }
+                        let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
+                        return matchesWeekday && matchesSearchText
+                    }
+                )
+            }.filter { !$0.trackers.isEmpty }
+        }
     }
     
     // MARK: - Fetched Results Controller
@@ -51,9 +147,9 @@ class TrackerStore: NSObject {
                                         NSSortDescriptor(key: "name", ascending: true)]
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                                                  managedObjectContext: context,
-                                                                  sectionNameKeyPath: "categoryLink.title",
-                                                                  cacheName: nil)
+                                                                 managedObjectContext: context,
+                                                                 sectionNameKeyPath: "categoryLink.title",
+                                                                 cacheName: nil)
         fetchedResultsController.delegate = self
         
         do {
@@ -64,85 +160,8 @@ class TrackerStore: NSObject {
         
         return fetchedResultsController
     }()
-    
-    // MARK: - Core Data Utilities
-    
-    func deleteAllData() {
-        let entities = context.persistentStoreCoordinator?.managedObjectModel.entities
-        
-        entities?.forEach { entity in
-            if let entityName = entity.name {
-                let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-                let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-                
-                do {
-                    try context.execute(batchDeleteRequest)
-                    try context.save()
-                    print("Успешно удалены все данные из \(entityName)")
-                } catch {
-                    print("Ошибка при удалении данных из \(entityName): \(error)")
-                }
-            }
-        }
-    }
-}
 
-// MARK: - HabitCreationViewControllerDelegate
-
-extension TrackerStore: HabitCreationViewControllerDelegate {
-    func didCreateTracker(tracker: Tracker, category: String) {
-        print("============================", tracker, category)
-        
-        // 1. Находим категорию по имени
-        let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
-        fetchRequest.predicate = NSPredicate(format: "title == %@", category)
-        
-        do {
-            let categories = try context.fetch(fetchRequest)
-            if let categoryCD = categories.first {
-                // 2. Создаем объект TrackerCoreData
-                let trackerCD = TrackerCoreData(context: context)
-                trackerCD.id = tracker.id
-                trackerCD.name = tracker.name
-                trackerCD.color = colorToHexString(color: tracker.color)
-                trackerCD.emojii = tracker.emoji
-                trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
-                trackerCD.categoryLink = categoryCD
-                
-                // 3. Добавляем трекер в категорию
-                categoryCD.addToTrackers(trackerCD)
-                
-                // 4. Сохраняем контекст
-                try context.save()
-                print("Трекер успешно сохранен и привязан к категории")
-            } else {
-                print("Категория не найдена: \(category)")
-                
-                // Создаем новую категорию
-                let newCategoryCD = TrackerCategoryCoreData(context: context)
-                newCategoryCD.title = category
-                
-                // Создаем объект TrackerCoreData
-                let trackerCD = TrackerCoreData(context: context)
-                trackerCD.id = tracker.id
-                trackerCD.name = tracker.name
-                trackerCD.color = colorToHexString(color: tracker.color)
-                trackerCD.emojii = tracker.emoji
-                trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
-                trackerCD.categoryLink = newCategoryCD
-                
-                // Добавляем трекер в категорию
-                newCategoryCD.addToTrackers(trackerCD)
-                
-                // Сохраняем контекст
-                try context.save()
-                print("Создана новая категория и добавлен трекер")
-            }
-        } catch {
-            print("Ошибка при сохранении трекера: \(error)")
-            context.rollback()
-        }
-    }
+    // MARK: - Helper Methods
     
     func convertScheduleToCoreData(schedule: [WeekDay]) -> String {
         let convertedString = schedule.map { String($0.rawValue) }.joined(separator: ",")
@@ -199,38 +218,100 @@ extension TrackerStore: HabitCreationViewControllerDelegate {
     }
 }
 
+// MARK: - HabitCreationViewControllerDelegate
+
+extension TrackerStore: HabitCreationViewControllerDelegate {
+    func didCreateTracker(tracker: Tracker, category: String) {
+        print("============================", tracker, category)
+        
+        // 1. Находим категорию по имени
+        let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
+        fetchRequest.predicate = NSPredicate(format: "title == %@", category)
+        
+        do {
+            let categories = try context.fetch(fetchRequest)
+            if let categoryCD = categories.first {
+                // 2. Создаем объект TrackerCoreData
+                let trackerCD = TrackerCoreData(context: context)
+                trackerCD.id = tracker.id
+                trackerCD.name = tracker.name
+                trackerCD.color = colorToHexString(color: tracker.color)
+                trackerCD.emojii = tracker.emoji
+                trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
+                trackerCD.categoryLink = categoryCD
+                
+                // 3. Добавляем трекер в категорию
+                categoryCD.addToTrackers(trackerCD)
+                
+                // 4. Сохраняем контекст
+                try context.save()
+                print("Трекер успешно сохранен и привязан к категории")
+            } else {
+                print("Категория не найдена: \(category)")
+                
+                // Создаем новую категорию
+                let newCategoryCD = TrackerCategoryCoreData(context: context)
+                newCategoryCD.title = category
+                
+                // Создаем объект TrackerCoreData
+                let trackerCD = TrackerCoreData(context: context)
+                trackerCD.id = tracker.id
+                trackerCD.name = tracker.name
+                trackerCD.color = colorToHexString(color: tracker.color)
+                trackerCD.emojii = tracker.emoji
+                trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
+                trackerCD.categoryLink = newCategoryCD
+                
+                // Добавляем трекер в категорию
+                newCategoryCD.addToTrackers(trackerCD)
+                
+                // Сохраняем контекст
+                try context.save()
+                print("Создана новая категория и добавлен трекер")
+            }
+            
+            // После успешного сохранения обновляем наши локальные категории
+            loadAllCategories()
+            filterVisibleCategories()
+            
+            // Уведомляем о изменениях
+            let update = TrackerUpdate(
+                insertedSections: IndexSet(0..<visibleCategories.count),
+                deletedSections: IndexSet(),
+                insertedIndexPaths: [],
+                deletedIndexPaths: []
+            )
+            delegate?.didUpdate(category: update)
+        } catch {
+            print("Ошибка при сохранении трекера: \(error)")
+            context.rollback()
+        }
+    }
+}
+
 // MARK: - TrackerStoreProtocol
 
 extension TrackerStore: TrackerStoreProtocol {
     var numberOfSections: Int {
-        fetchedResultsController.sections?.count ?? 0
+        return visibleCategories.count
     }
     
     func numberOfRowsInSection(_ section: Int) -> Int {
-        fetchedResultsController.sections?[section].numberOfObjects ?? 0
+        guard section < visibleCategories.count else { return 0 }
+        return visibleCategories[section].trackers.count
     }
     
     func sectionTitle(for section: Int) -> String? {
-        return fetchedResultsController.sections?[section].name
+        guard section < visibleCategories.count else { return nil }
+        return visibleCategories[section].title
     }
     
     func object(at indexPath: IndexPath) -> Tracker? {
-        let tracker = fetchedResultsController.object(at: indexPath)
-        
-        if let color = tracker.color, let schedule = tracker.schedule {
-            let convertedColor = hexStringToColor(hex: color)
-            let convertedSchedule = convertCoreDataToSchedule(stringSchedule: schedule)
-            
-            return Tracker(
-                id: tracker.id ?? UUID(),
-                name: tracker.name ?? "",
-                color: convertedColor ?? .ypBackground,
-                emoji: tracker.emojii ?? "",
-                schedule: convertedSchedule,
-                type: .habit
-            )
+        guard indexPath.section < visibleCategories.count,
+              indexPath.row < visibleCategories[indexPath.section].trackers.count else {
+            return nil
         }
-        return nil
+        return visibleCategories[indexPath.section].trackers[indexPath.row]
     }
 }
 
@@ -245,6 +326,11 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        // При любых изменениях в Core Data
+        loadAllCategories()      // Обновляем все категории
+        filterVisibleCategories() // Перефильтровываем видимые
+
+        // Уведомляем делегат о изменениях
         delegate?.didUpdate(category: TrackerUpdate(
             insertedSections: insertedSections,
             deletedSections: deletedSections,
