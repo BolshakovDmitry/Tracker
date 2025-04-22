@@ -356,7 +356,7 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
             }
         case .update:
             // Для обновлений обычно используется перезагрузка элемента
-            if let indexPath = indexPath {
+            if let _ = indexPath {
                 // Мы можем добавить indexPath в список для перезагрузки, если нужно
             }
         @unknown default:

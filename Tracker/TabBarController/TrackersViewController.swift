@@ -172,7 +172,7 @@ final class TrackersViewController: UIViewController {
         let calendar = Calendar.current
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        filterTrackers(by: chosenDay)
+        delegateCoreData?.filterCategories(by: chosenDay, searchText: nil)
     }
     
     // Добавьте отдельный метод для фильтрации:
@@ -403,25 +403,7 @@ extension TrackersViewController: UICollectionViewDataSource {
     
     extension TrackersViewController: TrackerStoreDelegate {
         func didUpdate(category: TrackerUpdate) {
-            trackersCollectionView.performBatchUpdates {
-                // Обновление секций
-                if !category.insertedSections.isEmpty {
-                    trackersCollectionView.insertSections(category.insertedSections)
-                }
-                
-                if !category.deletedSections.isEmpty {
-                    trackersCollectionView.deleteSections(category.deletedSections)
-                }
-                
-                // Обновление элементов внутри секций
-                if !category.insertedIndexPaths.isEmpty {
-                    trackersCollectionView.insertItems(at: category.insertedIndexPaths)
-                }
-                
-                if !category.deletedIndexPaths.isEmpty {
-                    trackersCollectionView.deleteItems(at: category.deletedIndexPaths)
-                }
-            }
+            trackersCollectionView.reloadData()
         }
         
     }
