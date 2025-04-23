@@ -257,7 +257,6 @@
             // Обновляем интерфейс
             trackersCollectionView.reloadData()
             
-            print("Категории после добавления:", dataManager.visibleCategories)
         }
         
 
@@ -277,6 +276,8 @@
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as! TrackerCollectionViewCell
             
             if let tracker = delegateCoreData?.object(at: indexPath) {
+                
+                
                 // Проверяем, выполнен ли трекер сегодня
                 let isCompleted = delegateCellCoreData?.isTrackerCompletedToday(id: tracker.id, date: datePicker.date) ?? false
                 

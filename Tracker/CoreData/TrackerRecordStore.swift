@@ -57,16 +57,32 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
     func isDoneTapped(tracker: TrackerRecord) {
         print("Добавление трекера к выполненным: \(tracker)")
         
-        let trackerRecordCoreData = TrackerRecordCoreData(context: context)
-        trackerRecordCoreData.id = tracker.id
-        trackerRecordCoreData.date = tracker.date
+        // Проверяем, является ли трекер нерегулярным событием
+        let fetchRequest = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
         
         do {
-            try context.save()
-            print("Трекер успешно отмечен как выполненный")
-            delegate?.didUpdate()
+            let trackers = try context.fetch(fetchRequest)
+            if let trackerCD = trackers.first {
+                // Сначала записываем отметку о выполнении
+                let trackerRecordCoreData = TrackerRecordCoreData(context: context)
+                trackerRecordCoreData.id = tracker.id
+                trackerRecordCoreData.date = tracker.date
+                
+                try context.save()
+                print("Трекер успешно отмечен как выполненный")
+                
+                // Если это нерегулярное событие, удаляем его
+                if let type = trackerCD.type, type == "irregularEvent" {
+                    context.delete(trackerCD)
+                    try context.save()
+                    print("Нерегулярное событие удалено после отметки")
+                }
+                
+                delegate?.didUpdate()
+            }
         } catch {
-            print("Ошибка при сохранении трекера: \(error)")
+            print("Ошибка при работе с трекером: \(error)")
             context.rollback()
         }
     }

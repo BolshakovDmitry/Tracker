@@ -113,6 +113,7 @@ final class TrackerTypesViewController: UIViewController {
         let irregularEventVC = HabitCreationViewController()
         irregularEventVC.trackerType = .irregularEvent
         irregularEventVC.delegate = trackerViewControllerDelegate
+        irregularEventVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
         irregularEventVC.modalPresentationStyle = .pageSheet
         present(irregularEventVC, animated: true, completion: nil)
     }

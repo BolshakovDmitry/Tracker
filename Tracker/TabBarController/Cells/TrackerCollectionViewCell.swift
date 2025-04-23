@@ -124,13 +124,16 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
-        if daysCompleted == 1 {
-                dayCountLabel.text = "1 день"
-            } else if daysCompleted >= 2 && daysCompleted <= 4 {
-                dayCountLabel.text = "\(daysCompleted) дня"
-            } else {
-                dayCountLabel.text = "\(daysCompleted) дней"
-            }
+        
+        if tracker.type == .irregularEvent {
+             dayCountLabel.text = ""
+         } else if daysCompleted == 1 {
+             dayCountLabel.text = "1 день"
+         } else if daysCompleted >= 2 && daysCompleted <= 4 {
+             dayCountLabel.text = "\(daysCompleted) дня"
+         } else {
+             dayCountLabel.text = "\(daysCompleted) дней"
+         }
         
         let _: Void = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
         

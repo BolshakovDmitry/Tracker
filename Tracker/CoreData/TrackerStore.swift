@@ -64,6 +64,10 @@ class TrackerStore: NSObject {
         do {
             let categoriesCoreData = try context.fetch(fetchRequest)
             categories = convertCDToCategories(categoriesCoreData)
+            for item in categories {
+                print("++++++++++++++", item)
+            }
+
         } catch {
             print("Ошибка при загрузке категорий: \(error)")
         }
@@ -82,10 +86,18 @@ class TrackerStore: NSObject {
                       let emoji = trackerCD.emojii,
                       let scheduleString = trackerCD.schedule else { return nil }
                 
+                // Определяем тип трекера
+                let trackerType: TrackerType
+                if let typeString = trackerCD.type, typeString == "irregularEvent" {
+                    trackerType = .irregularEvent
+                } else {
+                    trackerType = .habit
+                }
+                
                 let schedule = convertCoreDataToSchedule(stringSchedule: scheduleString)
                 let trackerColor = hexStringToColor(hex: color) ?? .gray
                 
-                return Tracker(id: id, name: name, color: trackerColor, emoji: emoji, schedule: schedule, type: .habit)
+                return Tracker(id: id, name: name, color: trackerColor, emoji: emoji, schedule: schedule, type: trackerType)
             }
             
             return TrackerCategory(title: title, trackers: trackers)
@@ -111,32 +123,43 @@ class TrackerStore: NSObject {
     
     private func filterVisibleCategories() {
         if currentSearchText == nil || currentSearchText?.isEmpty == true {
-            // Фильтрация только по дню недели
+            // Фильтрация с учетом нерегулярных событий
             visibleCategories = categories.map { category in
                 TrackerCategory(
                     title: category.title,
                     trackers: category.trackers.filter { tracker in
-                        tracker.schedule.contains { weekDay in
+                        // Нерегулярные события показываем всегда
+                        if tracker.type == .irregularEvent {
+                            print("YEHHHHHHHHHHHH!!!!!!!!!!!!!!!!!!!!!!!!!")
+                                return true
+                            }
+                        // Регулярные события фильтруем по дню недели
+                       return tracker.schedule.contains { weekDay in
                             weekDay.numberValue == currentWeekday
                         }
                     }
                 )
             }.filter { !$0.trackers.isEmpty }
         } else {
-            // Фильтрация по дню недели и тексту поиска
+            // Фильтрация по дню недели, типу и тексту поиска
             visibleCategories = categories.map { category in
                 TrackerCategory(
                     title: category.title,
                     trackers: category.trackers.filter { tracker in
-                        let matchesWeekday = tracker.schedule.contains { weekDay in
-                            weekDay.numberValue == currentWeekday
-                        }
+                        let matchesWeekday = tracker.type == .irregularEvent ||
+                            tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
                         let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
                         return matchesWeekday && matchesSearchText
                     }
                 )
             }.filter { !$0.trackers.isEmpty }
         }
+        for item in visibleCategories {
+            print("visibleCategories at the moment", item)
+        }
+        
     }
     
     // MARK: - Fetched Results Controller
@@ -222,7 +245,6 @@ class TrackerStore: NSObject {
 
 extension TrackerStore: HabitCreationViewControllerDelegate {
     func didCreateTracker(tracker: Tracker, category: String) {
-        print("============================", tracker, category)
         
         // 1. Находим категорию по имени
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
@@ -238,6 +260,7 @@ extension TrackerStore: HabitCreationViewControllerDelegate {
                 trackerCD.color = colorToHexString(color: tracker.color)
                 trackerCD.emojii = tracker.emoji
                 trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
+                trackerCD.type = tracker.type == .irregularEvent ? "irregularEvent" : "habit"
                 trackerCD.categoryLink = categoryCD
                 
                 // 3. Добавляем трекер в категорию
@@ -261,8 +284,7 @@ extension TrackerStore: HabitCreationViewControllerDelegate {
                 trackerCD.emojii = tracker.emoji
                 trackerCD.schedule = convertScheduleToCoreData(schedule: tracker.schedule)
                 trackerCD.categoryLink = newCategoryCD
-                
-                // Добавляем трекер в категорию
+                trackerCD.type = tracker.type == .irregularEvent ? "irregularEvent" : "habit"
                 newCategoryCD.addToTrackers(trackerCD)
                 
                 // Сохраняем контекст
@@ -311,6 +333,7 @@ extension TrackerStore: TrackerStoreProtocol {
               indexPath.row < visibleCategories[indexPath.section].trackers.count else {
             return nil
         }
+        print("В методе object класса TrackerStore", visibleCategories[indexPath.section].trackers[indexPath.row])
         return visibleCategories[indexPath.section].trackers[indexPath.row]
     }
 }

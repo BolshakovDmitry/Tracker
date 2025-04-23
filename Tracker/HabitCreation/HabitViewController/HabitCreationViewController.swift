@@ -1,9 +1,5 @@
 import UIKit
 
-protocol HabitCreationViewControllerProtocol: AnyObject {
-    var delegate: habitCreationViewControllerDelegate? { get set }
-}
-
 protocol ScheduleSelectionDelegate: AnyObject {
     func didSelectSchedule(_ schedule: [WeekDay])
 }
@@ -269,7 +265,7 @@ final class HabitCreationViewController: UIViewController {
         let selectedColor = colors[colorIndex]
         
         // Для нерегулярного события устанавливаем пустое расписание
-        let schedule = trackerType == .habit ? selectedSchedule : []
+        let schedule = trackerType == .habit ? selectedSchedule : WeekDay.allCases
         
         // Создаем новую привычку с выбранным расписанием
         let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
@@ -278,9 +274,6 @@ final class HabitCreationViewController: UIViewController {
         
         // Здесь будет логика сохранения новой привычки
         print("Создан новый трекер: \(newTracker)")
-        
-        // Используем категорию или "Общее", если категория не выбрана
-        delegate?.addTracker(newTracker, to: selectedCategory ?? "Общее")
         
         let previousVC = self.presentingViewController
         
