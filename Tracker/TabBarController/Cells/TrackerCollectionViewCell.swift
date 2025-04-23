@@ -2,9 +2,11 @@ import UIKit
 
 
 protocol TrackerCellDelegate: AnyObject {
-    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath)
+    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath, type: TrackerType)
 }
 final class TrackerCollectionViewCell: UICollectionViewCell {
+    
+    private var trackeType: TrackerType?
     // Элементы интерфейса ячейки (эмодзи, название, цвет и т.д.)
     private let containerView: UIView = {
         let view = UIView()
@@ -112,11 +114,12 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
             return
         }
         isCompletedToday.toggle()
-        delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath)
+        delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath, type: trackeType ?? .habit)
         
     }
     
     func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int) {
+        self.trackeType = tracker.type
         self.indexPath = indexPath
         self.isCompletedToday = isCompletedToday
         trackerId = tracker.id

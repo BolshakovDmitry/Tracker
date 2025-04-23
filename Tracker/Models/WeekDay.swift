@@ -41,3 +41,21 @@ public enum WeekDay: Int, CaseIterable, Hashable {
         }
     }
 }
+
+// Добавим расширение для преобразования числового дня недели в WeekDay
+extension WeekDay {
+    static func from(_ weekdayNumber: Int) -> WeekDay {
+        // Calendar.component(.weekday) возвращает 1 для воскресенья, 2 для понедельника и т.д.
+        // Преобразуем в нашу систему WeekDay
+        switch weekdayNumber {
+        case 1: return .sunday
+        case 2: return .monday
+        case 3: return .tuesday
+        case 4: return .wednesday
+        case 5: return .thursday
+        case 6: return .friday
+        case 7: return .saturday
+        default: return .monday // Значение по умолчанию
+        }
+    }
+}

@@ -90,11 +90,7 @@
             setupNavigationBar()
             reloadTableWithActualDayTrackers()
             searchTextField.becomeFirstResponder()
-            if let showStub = delegateCoreData?.numberOfSections {
-                if showStub >= 0 {
-                    placeholderImageView.isHidden = false
-                }
-            }
+            updatePlaceholderVisibility()
         }
         
         // MARK: - Setup UI
@@ -176,6 +172,15 @@
             let chosenDay = calendar.component(.weekday, from: datePicker.date)
             
             delegateCoreData?.filterCategories(by: chosenDay, searchText: nil)
+        }
+        
+        
+        private func updatePlaceholderVisibility() {
+            if let numberOfSections = delegateCoreData?.numberOfSections, numberOfSections > 0 {
+                placeholderImageView.isHidden = true
+            } else {
+                placeholderImageView.isHidden = false
+            }
         }
         
        
@@ -358,7 +363,7 @@
     // MARK: - Cell Delegate
 
         extension TrackersViewController: TrackerCellDelegate {
-            func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
+            func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath, type: TrackerType) {
                 // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
                 let calendar = Calendar.current
                 let today = Date()
@@ -378,23 +383,11 @@
                 let tracker = TrackerRecord(id: id, date: datePicker.date)
                 
                 if isComplete {
-                    delegateCellCoreData?.isDoneTapped(tracker: tracker)
+                    delegateCellCoreData?.isDoneTapped(tracker: tracker, trackerType: type)
                 } else {
-                    delegateCellCoreData?.unDoneTapped(tracker: tracker)
+                    delegateCellCoreData?.unDoneTapped(tracker: tracker, trackerType: type)
                 }
-                
-    //            // Если дата не в будущем, обрабатываем обычным образом
-    //            if isComplete {
-    //                let newTracker = TrackerRecord(id: id, date: datePicker.date)
-    //                completedTrackers.append(newTracker)
-    //                trackersCollectionView.reloadItems(at: [indexPath])
-    //            } else {
-    //                completedTrackers.removeAll { trackerRecord in
-    //                    let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-    //                    return trackerRecord.id == id && isSameDay
-    //                }
-    //                trackersCollectionView.reloadItems(at: [indexPath])
-    //            }
+
             }
         }
         
@@ -405,9 +398,13 @@
             
         }
 
+
     extension TrackersViewController: TrackerRecordStoreDelegate {
         func didUpdate() {
+            delegateCoreData?.loadAllCategories()
+            delegateCoreData?.filterVisibleCategories()
             trackersCollectionView.reloadData()
+            updatePlaceholderVisibility()
         }
         
         

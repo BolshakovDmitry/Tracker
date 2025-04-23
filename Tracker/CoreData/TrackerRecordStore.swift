@@ -6,8 +6,8 @@ protocol TrackerRecordStoreDelegate: AnyObject {
 }
 
 protocol TrackerRecordStoreProtocol {
-    func isDoneTapped(tracker: TrackerRecord)
-    func unDoneTapped(tracker: TrackerRecord)
+    func isDoneTapped(tracker: TrackerRecord, trackerType: TrackerType)
+    func unDoneTapped(tracker: TrackerRecord, trackerType: TrackerType)
     func isTrackerCompletedToday(id: UUID, date: Date) -> Bool
     func countCompletedDays(id: UUID) -> Int
 }
@@ -54,40 +54,66 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
     
     // MARK: - TrackerRecordStoreProtocol
     
-    func isDoneTapped(tracker: TrackerRecord) {
-        print("Добавление трекера к выполненным: \(tracker)")
+    func isDoneTapped(tracker: TrackerRecord, trackerType: TrackerType) {
         
-        // Проверяем, является ли трекер нерегулярным событием
-        let fetchRequest = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
-        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
         
-        do {
-            let trackers = try context.fetch(fetchRequest)
-            if let trackerCD = trackers.first {
-                // Сначала записываем отметку о выполнении
-                let trackerRecordCoreData = TrackerRecordCoreData(context: context)
-                trackerRecordCoreData.id = tracker.id
-                trackerRecordCoreData.date = tracker.date
-                
+        if trackerType == .habit {
+            let trackerRecordCoreData = TrackerRecordCoreData(context: context)
+            trackerRecordCoreData.id = tracker.id
+            trackerRecordCoreData.date = tracker.date
+            
+            do {
                 try context.save()
                 print("Трекер успешно отмечен как выполненный")
-                
-                // Если это нерегулярное событие, удаляем его
-                if let type = trackerCD.type, type == "irregularEvent" {
-                    context.delete(trackerCD)
-                    try context.save()
-                    print("Нерегулярное событие удалено после отметки")
-                }
-                
                 delegate?.didUpdate()
+            } catch {
+                print("Ошибка при сохранении трекера: \(error)")
+                context.rollback()
             }
-        } catch {
-            print("Ошибка при работе с трекером: \(error)")
-            context.rollback()
-        }
+        } else {
+            print("!!!!!!!!!!!!!!!in irregular section!!!!!!!!!!!!!!!!!")
+            // Для нерегулярных событий
+                    do {
+                        // 1. Создаем запись в TrackerRecordCoreData для текущего дня
+                        let trackerRecordCoreData = TrackerRecordCoreData(context: context)
+                        trackerRecordCoreData.id = tracker.id
+                        trackerRecordCoreData.date = tracker.date
+                        
+                        // 2. Находим сам трекер в TrackerCoreData
+                        let fetchTrackerRequest = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")
+                        fetchTrackerRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+                        
+                        let trackers = try context.fetch(fetchTrackerRequest)
+                        if let trackerCD = trackers.first {
+                            
+                            print("!!!!!!!!!!!!!!!!!! Найденный трекер - ", trackerCD.id)
+                            // 3. Определяем текущий день недели
+                            let calendar = Calendar.current
+                            let weekdayComponent = calendar.component(.weekday, from: tracker.date)
+                            
+                            // 4. Преобразуем в формат WeekDay (учитывая разницу в нумерации)
+                            let weekDay = WeekDay.from(weekdayComponent)
+                            
+                            // 5. Обновляем расписание, оставляя только текущий день
+                            trackerCD.schedule = convertScheduleToCoreData(schedule: [weekDay])
+                            
+                            // 6. Сохраняем изменения
+                            try context.save()
+                            print("Нерегулярное событие обновлено: расписание изменено на день \(weekDay)")
+                            
+                            delegate?.didUpdate()
+                        } else {
+                            print("Трекер не найден")
+                        }
+                    } catch {
+                        print("Ошибка при обработке нерегулярного события: \(error)")
+                        context.rollback()
+                    }
+                }
     }
     
-    func unDoneTapped(tracker: TrackerRecord) {
+    
+    func unDoneTapped(tracker: TrackerRecord, trackerType: TrackerType) {
         let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
         let calendar = Calendar.current
         fetchRequest.predicate = NSPredicate(format: "id == %@ AND date >= %@ AND date <= %@",
@@ -112,13 +138,22 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
     func isTrackerCompletedToday(id: UUID, date: Date) -> Bool {
         let calendar = Calendar.current
         let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
-        fetchRequest.predicate = NSPredicate(format: "id == %@ AND date >= %@ AND date <= %@",
-                                            id as CVarArg,
-                                            calendar.startOfDay(for: date) as NSDate,
-                                            calendar.endOfDay(for: date) as NSDate)
+        
+        // Получаем все записи для данного трекера
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        
         do {
-            let count = try context.count(for: fetchRequest)
-            return count > 0
+            let records = try context.fetch(fetchRequest)
+            
+            // Проверяем, есть ли запись с той же датой (только день)
+            for record in records {
+                if let recordDate = record.date {
+                    if calendar.isDate(recordDate, inSameDayAs: date) {
+                        return true
+                    }
+                }
+            }
+            return false
         } catch {
             print("Ошибка при проверке статуса трекера: \(error)")
             return false
@@ -148,6 +183,11 @@ extension TrackerRecordStore: NSFetchedResultsControllerDelegate {
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         // Уведомление об изменениях
         delegate?.didUpdate()
+    }
+    
+    func convertScheduleToCoreData(schedule: [WeekDay]) -> String {
+        let convertedString = schedule.map { String($0.rawValue) }.joined(separator: ",")
+        return convertedString
     }
 }
 

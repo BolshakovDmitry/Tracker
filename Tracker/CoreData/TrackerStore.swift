@@ -18,6 +18,8 @@ protocol TrackerStoreProtocol {
     func object(at: IndexPath) -> Tracker?
     func sectionTitle(for section: Int) -> String?
     func filterCategories(by weekday: Int, searchText: String?)
+    func filterVisibleCategories()
+    func loadAllCategories()
 }
 
 class TrackerStore: NSObject {
@@ -59,15 +61,11 @@ class TrackerStore: NSObject {
     
     // MARK: - Data Loading
     
-    private func loadAllCategories() {
+     func loadAllCategories() {
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
         do {
             let categoriesCoreData = try context.fetch(fetchRequest)
             categories = convertCDToCategories(categoriesCoreData)
-            for item in categories {
-                print("++++++++++++++", item)
-            }
-
         } catch {
             print("Ошибка при загрузке категорий: \(error)")
         }
@@ -121,18 +119,17 @@ class TrackerStore: NSObject {
         delegate?.didUpdate(category: update)
     }
     
-    private func filterVisibleCategories() {
+    func filterVisibleCategories() {
         if currentSearchText == nil || currentSearchText?.isEmpty == true {
             // Фильтрация с учетом нерегулярных событий
             visibleCategories = categories.map { category in
                 TrackerCategory(
                     title: category.title,
                     trackers: category.trackers.filter { tracker in
-                        // Нерегулярные события показываем всегда
-                        if tracker.type == .irregularEvent {
-                            print("YEHHHHHHHHHHHH!!!!!!!!!!!!!!!!!!!!!!!!!")
-                                return true
-                            }
+                        // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
+                        if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
+                            weekDay.numberValue == currentWeekday
+                        }) { return true }
                         // Регулярные события фильтруем по дню недели
                        return tracker.schedule.contains { weekDay in
                             weekDay.numberValue == currentWeekday
@@ -157,7 +154,7 @@ class TrackerStore: NSObject {
             }.filter { !$0.trackers.isEmpty }
         }
         for item in visibleCategories {
-            print("visibleCategories at the moment", item)
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!visibleCategories at the moment", item)
         }
         
     }
@@ -315,6 +312,11 @@ extension TrackerStore: HabitCreationViewControllerDelegate {
 
 extension TrackerStore: TrackerStoreProtocol {
     var numberOfSections: Int {
+        
+        loadAllCategories()
+        filterVisibleCategories()
+        
+        
         return visibleCategories.count
     }
     
@@ -350,9 +352,7 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         // При любых изменениях в Core Data
-        loadAllCategories()      // Обновляем все категории
-        filterVisibleCategories() // Перефильтровываем видимые
-
+        
         // Уведомляем делегат о изменениях
         delegate?.didUpdate(category: TrackerUpdate(
             insertedSections: insertedSections,
