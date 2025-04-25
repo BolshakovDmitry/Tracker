@@ -26,7 +26,7 @@ final class NewCategory: UIViewController {
     
     private lazy var categoryNameTextField: UITextField = {
         let textfield = UITextField()
-        textfield.backgroundColor = .ypGrey
+        textfield.backgroundColor = UIColor(named: "CustomBackgroundDay")
         textfield.textColor = .black
         textfield.translatesAutoresizingMaskIntoConstraints = false
         textfield.layer.cornerRadius = 16

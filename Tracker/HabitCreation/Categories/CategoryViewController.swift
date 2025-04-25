@@ -50,6 +50,38 @@ final class CategoryViewController: UIViewController {
         return addButton
     }()
     
+    // Добавленный стек для заглушки
+    private let placeholderStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 8
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.isHidden = true
+        return stackView
+    }()
+
+    private let placeholderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "emptyTrackers")
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+
+    private let placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Привычки и события можно\nобъединить по смыслу"
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .black
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -58,6 +90,7 @@ final class CategoryViewController: UIViewController {
         setupUI()
         setupTableView()
         setupActions()
+        updatePlaceholderVisibility()
     }
     
     // MARK: - Setup UI
@@ -65,10 +98,15 @@ final class CategoryViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .white
         
+        // Настраиваем стек с заглушкой
+        placeholderStackView.addArrangedSubview(placeholderImageView)
+        placeholderStackView.addArrangedSubview(placeholderLabel)
+        
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
         view.addSubview(tableView)
         view.addSubview(addButton)
+        view.addSubview(placeholderStackView)
         
         // Настраиваем констрейнты
         NSLayoutConstraint.activate([
@@ -82,11 +120,19 @@ final class CategoryViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             tableView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -16),
             
-            //  Кнопка
+            // Кнопка
             addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            addButton.heightAnchor.constraint(equalToConstant: 60)
+            addButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Стек с заглушкой
+            placeholderStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            placeholderStackView.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
+            
+            // Размеры для изображения
+            placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
+            placeholderImageView.heightAnchor.constraint(equalToConstant: 80)
         ])
     }
     
@@ -108,13 +154,19 @@ final class CategoryViewController: UIViewController {
         newCategoryVC.modalPresentationStyle = .pageSheet
         present(newCategoryVC, animated: true)
     }
+    
+    // MARK: - Helpers
+    
+    private func updatePlaceholderVisibility() {
+        let categoriesCount = delegateCoreData?.numberOfRowsInSection(0) ?? 0
+        placeholderStackView.isHidden = categoriesCount > 0
+    }
 }
 
 // MARK: - NewCategoryDelegate
 
 extension CategoryViewController: NewCategoryDelegate {
     func didCreateCategory(_ categoryName: String) {
-        
         let newCategory = TrackerCategory(title: categoryName, trackers: [])
         var updatedCategories = dataManager.categories
         updatedCategories.append(newCategory)
@@ -122,11 +174,11 @@ extension CategoryViewController: NewCategoryDelegate {
         
         // Обновляем таблицу
         tableView.reloadData()
-    
         delegateCoreData?.addCategory(with: newCategory)
         
+        // Обновляем видимость заглушки
+        updatePlaceholderVisibility()
     }
-    
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
@@ -138,7 +190,6 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
         guard let record = delegateCoreData?.object(at: indexPath) else { return UITableViewCell() }
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         cell.textLabel?.text = record.title
@@ -169,9 +220,8 @@ extension CategoryViewController: TrackerCategoryStoreDelegate {
             tableView.insertRows(at: insertedIndexPaths, with: .automatic)
             tableView.deleteRows(at: deletedIndexPaths, with: .fade)
         }
+        
+        // Обновляем видимость заглушки после изменений
+        updatePlaceholderVisibility()
     }
-    
-
-    
-    
 }

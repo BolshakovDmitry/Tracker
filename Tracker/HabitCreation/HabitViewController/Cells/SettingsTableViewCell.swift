@@ -2,6 +2,19 @@ import UIKit
 
 final class SettingsTableViewCell: UITableViewCell {
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // Удаляем все субвью
+        contentView.subviews.forEach { $0.removeFromSuperview() }
+        
+        // Пересоздаем вью
+        setupView()
+    }
+    
+    
+    private var isLast: Bool = false
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)
@@ -22,6 +35,7 @@ final class SettingsTableViewCell: UITableViewCell {
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(systemName: "chevron.right"))
         imageView.tintColor = .gray
+        imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -36,28 +50,30 @@ final class SettingsTableViewCell: UITableViewCell {
     }
     
     private func setupView() {
-        backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+        
+        
+        contentView.backgroundColor = UIColor(named: "CustomBackgroundDay")
         contentView.addSubview(titleLabel)
         contentView.addSubview(valueLabel)
         contentView.addSubview(chevronImageView)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 18),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 25),
             titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            
             
             chevronImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             chevronImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            chevronImageView.widthAnchor.constraint(equalToConstant: 7),
-            chevronImageView.heightAnchor.constraint(equalToConstant: 12),
+            chevronImageView.widthAnchor.constraint(equalToConstant: 12),
+            chevronImageView.heightAnchor.constraint(equalToConstant: 20),
             
             valueLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
             valueLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 16)
         ])
     }
     
-    func configure(with title: String, value: String?) {
+    func configure(with title: String, value: String?, isLast: Bool) {
         titleLabel.text = title
         valueLabel.text = value
+        self.isLast = isLast
     }
 }

@@ -71,7 +71,7 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
                 context.rollback()
             }
         } else {
-            print("!!!!!!!!!!!!!!!in irregular section!!!!!!!!!!!!!!!!!")
+            
             // Для нерегулярных событий
                     do {
                         // 1. Создаем запись в TrackerRecordCoreData для текущего дня
@@ -86,7 +86,7 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
                         let trackers = try context.fetch(fetchTrackerRequest)
                         if let trackerCD = trackers.first {
                             
-                            print("!!!!!!!!!!!!!!!!!! Найденный трекер - ", trackerCD.id)
+
                             // 3. Определяем текущий день недели
                             let calendar = Calendar.current
                             let weekdayComponent = calendar.component(.weekday, from: tracker.date)

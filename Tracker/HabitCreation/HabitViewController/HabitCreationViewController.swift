@@ -46,8 +46,8 @@ final class HabitCreationViewController: UIViewController {
     
     private let nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название привычки"
-        textField.backgroundColor = UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3)
+        textField.placeholder = "Введите название трекера"
+        textField.backgroundColor = UIColor(named: "CustomBackgroundDay")
         textField.layer.cornerRadius = 16
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
         textField.leftViewMode = .always
@@ -56,15 +56,18 @@ final class HabitCreationViewController: UIViewController {
     }()
     
     // Заменяем отдельные кнопки на TableView
-    private let settingsTableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .plain)
-        tableView.isScrollEnabled = false
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
-        tableView.layer.cornerRadius = 10
-        tableView.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        return tableView
-    }()
+   
+        private let settingsTableView: UITableView = {
+            let tableView = UITableView(frame: .zero, style: .plain)
+            tableView.isScrollEnabled = false
+            tableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
+            tableView.separatorStyle = .none // Убираем стандартные разделители
+            tableView.layer.cornerRadius = 16
+            tableView.clipsToBounds = true
+            tableView.translatesAutoresizingMaskIntoConstraints = false
+            return tableView
+        }()
+
     
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -203,6 +206,11 @@ final class HabitCreationViewController: UIViewController {
         
         // Регистрируем ячейку
         settingsTableView.register(SettingsTableViewCell.self, forCellReuseIdentifier: "SettingsCell")
+        settingsTableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
+        settingsTableView.separatorColor = UIColor(named: "CustomGrey")?.withAlphaComponent(0.3)
+        settingsTableView.layer.cornerRadius = 16 // Добавляем скругление углов
+        settingsTableView.clipsToBounds = true
+        settingsTableView.tableFooterView = UIView()
     }
     
     private func setupCollectionView() {
@@ -331,13 +339,18 @@ final class HabitCreationViewController: UIViewController {
     // Обработчик нажатия на ячейку расписания
     private func showScheduleViewController() {
         print("Переход к настройке расписания")
-        
         let scheduleVC = ScheduleViewController()
-        scheduleVC.delegate = self
-        scheduleVC.modalPresentationStyle = .pageSheet
-        
-        present(scheduleVC, animated: true)
-    }
+           scheduleVC.delegate = self
+           
+           // Создаем navigation controller с scheduleVC в качестве корневого
+           let navController = UINavigationController(rootViewController: scheduleVC)
+           
+           // Настраиваем presentation style (можно использовать .pageSheet или .formSheet)
+           navController.modalPresentationStyle = .pageSheet
+           
+           // Презентуем navigation controller
+           present(navController, animated: true)
+       }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
@@ -364,14 +377,26 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         case .category:
             value = selectedCategory
         case .schedule:
-            if !selectedSchedule.isEmpty {
-                value = formattedSchedule(selectedSchedule)
-            }
+            value = selectedSchedule.isEmpty ? nil : formattedSchedule(selectedSchedule)
+        }
+        
+        let isLast: Bool = false
+        
+        // Настраиваем сепаратор
+        if indexPath.row == (trackerType == .habit ? SettingsType.allCases.count - 1 : 0) {
+            print(indexPath.row, "in the Empty separator sec")
+                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        } else {
+            print(indexPath.row, "in the separator sec")
+            let customSeparator = UIView(frame: CGRect(x: 16, y: cell.frame.height - 2, width: cell.frame.width - 32, height: 0.5))
+            customSeparator.backgroundColor = UIColor(named: "YP Grey")
+            cell.contentView.addSubview(customSeparator)
         }
         
         
+        // Настраиваем ячейку через метод configure
+        cell.configure(with: settingsType.title, value: value, isLast: isLast)
         
-        cell.configure(with: settingsType.title, value: value)
         return cell
     }
     
@@ -393,8 +418,18 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         }
     }
     
+
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75 // Высота каждой ячейки
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        // Убираем сепаратор у последней ячейки
+        if indexPath.row == SettingsType.allCases.count - 1 || trackerType == .irregularEvent {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        }
+        
     }
 }
 
@@ -485,51 +520,41 @@ extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
     
     // Константы для расчета размеров и отступов
     private struct LayoutConstants {
-        static let emojiCellsPerRow: CGFloat = 6
-        static let colorCellsPerRow: CGFloat = 6
-        
-        static let emojiInteritemSpacing: CGFloat = 5
-        static let colorInteritemSpacing: CGFloat = 15
-        
-        static let emojiLineSpacing: CGFloat = 5
-        static let colorLineSpacing: CGFloat = 15
-        
+        static let itemSize: CGFloat = 52
+        static let interitemSpacing: CGFloat = 5
+        static let lineSpacing: CGFloat = 0
         static let sectionInsets = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 0)
         static let headerHeight: CGFloat = 40
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let isEmojiSection = indexPath.section == 0
-        
-        // Количество ячеек в ряду и отступы в зависимости от секции
-        let cellsPerRow = isEmojiSection ? LayoutConstants.emojiCellsPerRow : LayoutConstants.colorCellsPerRow
-        let interitemSpacing = isEmojiSection ? LayoutConstants.emojiInteritemSpacing : LayoutConstants.colorInteritemSpacing
-        
-        // Расчет доступной ширины
-        let totalInteritemSpacing = interitemSpacing * (cellsPerRow - 1)
-        let availableWidth = collectionView.frame.width - totalInteritemSpacing
-        
-        // Ширина ячейки
-        let width = availableWidth / cellsPerRow
-        
-        // Высота ячейки равна ширине для квадратных ячеек
-        return CGSize(width: width, height: width)
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: LayoutConstants.itemSize, height: LayoutConstants.itemSize)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: LayoutConstants.headerHeight)
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return LayoutConstants.interitemSpacing
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return LayoutConstants.lineSpacing
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       insetForSectionAt section: Int) -> UIEdgeInsets {
         return LayoutConstants.sectionInsets
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return section == 0 ? LayoutConstants.emojiInteritemSpacing : LayoutConstants.colorInteritemSpacing
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return section == 0 ? LayoutConstants.emojiLineSpacing : LayoutConstants.colorLineSpacing
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: collectionView.frame.width, height: LayoutConstants.headerHeight)
     }
 }
 

@@ -26,15 +26,33 @@
             return picker
         }()
         
-        private var placeholderImageView: UIImageView = {
+        private let placeholderStackView: UIStackView = {
+            let stackView = UIStackView()
+            stackView.axis = .vertical
+            stackView.alignment = .center
+            stackView.spacing = 10
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.isHidden = true
+            return stackView
+        }()
+
+        private let placeholderImageView: UIImageView = {
             let imageView = UIImageView()
             imageView.image = UIImage(named: "emptyTrackers")
             imageView.contentMode = .scaleAspectFill
             imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.clipsToBounds = true
-            imageView.isHidden = true
             return imageView
-            
+        }()
+
+        private let placeholderLabel: UILabel = {
+            let label = UILabel()
+            label.text = "Что будем отслеживать?"
+            label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+            label.textColor = .black
+            label.textAlignment = .center
+            label.translatesAutoresizingMaskIntoConstraints = false
+            return label
         }()
         
         private lazy var searchTextField: UISearchTextField = {
@@ -98,33 +116,36 @@
         private func setupUI() {
             view.backgroundColor = .white
             
-            // Добавляем коллекцию на экран
+            // Добавляем элементы в стек
+            placeholderStackView.addArrangedSubview(placeholderImageView)
+            placeholderStackView.addArrangedSubview(placeholderLabel)
+
+            // Добавляем элементы на экран
             view.addSubview(trackersCollectionView)
             view.addSubview(searchTextField)
-            view.addSubview(placeholderImageView)
+            view.addSubview(placeholderStackView)
             
             // Настраиваем констрейнты
             NSLayoutConstraint.activate([
                 searchTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
                 searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
                 searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            ])
-            NSLayoutConstraint.activate([
-                placeholderImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                placeholderImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-                // placeholderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-                // placeholderImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-            ])
-            NSLayoutConstraint.activate([
+                
+                // Констрейнты для стека с заглушкой
+                placeholderStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                placeholderStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                
+                // Задаем размеры для изображения
+                placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
+                placeholderImageView.heightAnchor.constraint(equalToConstant: 80),
+                
                 trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
                 trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
                 trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
                 trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
             ])
             
-            
             datePicker.addTarget(self, action: #selector(dateChanged(_:)), for: .valueChanged)
-            
         }
         
         private func reloadTableWithActualDayTrackers() {
@@ -177,9 +198,9 @@
         
         private func updatePlaceholderVisibility() {
             if let numberOfSections = delegateCoreData?.numberOfSections, numberOfSections > 0 {
-                placeholderImageView.isHidden = true
+                placeholderStackView.isHidden = true
             } else {
-                placeholderImageView.isHidden = false
+                placeholderStackView.isHidden = false
             }
         }
         
