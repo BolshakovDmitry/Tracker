@@ -4,7 +4,7 @@ protocol ScheduleSelectionDelegate: AnyObject {
     func didSelectSchedule(_ schedule: [WeekDay])
 }
 
-protocol HabitCreationViewControllerDelegate: AnyObject {
+protocol HabitCreationVCDelegate: AnyObject {
     func didCreateTracker(tracker: Tracker, category: String)
 }
 
@@ -29,7 +29,7 @@ final class HabitCreationViewController: UIViewController {
     
     // MARK: - public fields
     
-    var delegate: habitCreationViewControllerDelegate?
+    var delegate: HabitCreationViewControllerDelegate?
     var delegateTrackerCoreData: HabitCreationViewControllerDelegate?
     var trackerType: TrackerType = .habit
     

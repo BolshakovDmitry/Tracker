@@ -47,10 +47,10 @@ class TrackerStore: NSObject {
     convenience init(delegate: TrackerStoreDelegate) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("App delegate not found or not of type AppDelegate")
-         }
-         
-         let context = appDelegate.persistentContainer.viewContext
-         self.init(context: context, delegate: delegate)
+        }
+        
+        let context = appDelegate.persistentContainer.viewContext
+        self.init(context: context, delegate: delegate)
     }
     
     init(context: NSManagedObjectContext, delegate: TrackerStoreDelegate?) {
@@ -65,7 +65,7 @@ class TrackerStore: NSObject {
     
     // MARK: - Data Loading
     
-     func loadAllCategories() {
+    func loadAllCategories() {
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
         do {
             let categoriesCoreData = try context.fetch(fetchRequest)
@@ -135,7 +135,7 @@ class TrackerStore: NSObject {
                             weekDay.numberValue == currentWeekday
                         }) { return true }
                         // Регулярные события фильтруем по дню недели
-                       return tracker.schedule.contains { weekDay in
+                        return tracker.schedule.contains { weekDay in
                             weekDay.numberValue == currentWeekday
                         }
                     }
@@ -148,17 +148,14 @@ class TrackerStore: NSObject {
                     title: category.title,
                     trackers: category.trackers.filter { tracker in
                         let matchesWeekday = tracker.type == .irregularEvent ||
-                            tracker.schedule.contains { weekDay in
-                                weekDay.numberValue == currentWeekday
-                            }
+                        tracker.schedule.contains { weekDay in
+                            weekDay.numberValue == currentWeekday
+                        }
                         let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
                         return matchesWeekday && matchesSearchText
                     }
                 )
             }.filter { !$0.trackers.isEmpty }
-        }
-        for item in visibleCategories {
-            
         }
         
     }
@@ -171,9 +168,9 @@ class TrackerStore: NSObject {
                                         NSSortDescriptor(key: "name", ascending: true)]
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                                                 managedObjectContext: context,
-                                                                 sectionNameKeyPath: "categoryLink.title",
-                                                                 cacheName: nil)
+                                                                  managedObjectContext: context,
+                                                                  sectionNameKeyPath: "categoryLink.title",
+                                                                  cacheName: nil)
         fetchedResultsController.delegate = self
         
         do {
@@ -184,7 +181,7 @@ class TrackerStore: NSObject {
         
         return fetchedResultsController
     }()
-
+    
     // MARK: - Helper Methods
     
     func convertScheduleToCoreData(schedule: [WeekDay]) -> String {
@@ -244,7 +241,7 @@ class TrackerStore: NSObject {
 
 // MARK: - HabitCreationViewControllerDelegate
 
-extension TrackerStore: HabitCreationViewControllerDelegate {
+extension TrackerStore: HabitCreationVCDelegate {
     func didCreateTracker(tracker: Tracker, category: String) {
         
         // 1. Находим категорию по имени

@@ -1,6 +1,6 @@
 import UIKit
 
-protocol habitCreationViewControllerDelegate: AnyObject {
+protocol habitCreationVCDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to categoryTitle: String)
 }
 
@@ -252,7 +252,7 @@ final class TrackersViewController: UIViewController {
 
 // MARK: - habitCreationViewControllerDelegate
 
-extension TrackersViewController: habitCreationViewControllerDelegate {
+extension TrackersViewController: habitCreationVCDelegate {
     func addTracker(_ tracker: Tracker, to categoryTitle: String) {
         var newCategories = [TrackerCategory]()
         var categoryExists = false

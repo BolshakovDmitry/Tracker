@@ -14,7 +14,7 @@ final class TrackerTypesViewController: UIViewController {
     }
     // MARK: - Public fields
     
-    weak var trackerViewControllerDelegate: habitCreationViewControllerDelegate?
+    weak var trackerViewControllerDelegate: HabitCreationViewControllerDelegate?
     
     
     // MARK: - UI Elements
