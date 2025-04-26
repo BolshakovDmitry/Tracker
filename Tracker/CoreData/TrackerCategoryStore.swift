@@ -16,7 +16,7 @@ protocol TrackerCategoryStoreProtocol {
     func object(at: IndexPath) -> TrackerCategory?
 }
 
-class TrackerCategoryStore: NSObject {
+final class TrackerCategoryStore: NSObject {
     
     // MARK: - NSFetchedResultsController
     private var insertedIndexes: IndexSet?
@@ -35,13 +35,21 @@ class TrackerCategoryStore: NSObject {
                                                                   sectionNameKeyPath: nil,
                                                                   cacheName: nil)
         fetchedResultsController.delegate = self
-        try? fetchedResultsController.performFetch()
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            print("Ошибка при выполнении fetchRequest: \(error)")
+        }
         return fetchedResultsController
     }()
     
     convenience init(delegate: TrackerCategoryStoreDelegate) {
-        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-        self.init(context: context, delegate: delegate)
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("App delegate not found or not of type AppDelegate")
+         }
+         
+         let context = appDelegate.persistentContainer.viewContext
+         self.init(context: context, delegate: delegate)
     }
     
     init(context: NSManagedObjectContext, delegate: TrackerCategoryStoreDelegate?) {
@@ -71,19 +79,29 @@ extension TrackerCategoryStore: TrackerCategoryStoreProtocol {
 
 // MARK: - NSFetchedResultsControllerDelegate
 extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+    
+    private func resetIndexSets() {
         insertedIndexes = IndexSet()
         deletedIndexes = IndexSet()
     }
     
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        resetIndexSets()
+    }
+    
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        delegate?.didUpdate(category: TrackerCategoryUpdate(
-            insertedIndexes: insertedIndexes!,
-            deletedIndexes: deletedIndexes!
-        )
-        )
-        insertedIndexes = nil
-        deletedIndexes = nil
+       guard let inserted = insertedIndexes, let deleted = deletedIndexes else {
+           assertionFailure("❌ insertedIndexes или deletedIndexes не инициализированы")
+           return
+       }
+       
+       delegate?.didUpdate(category: TrackerCategoryUpdate(
+           insertedIndexes: inserted,
+           deletedIndexes: deleted
+       ))
+
+       insertedIndexes = nil
+       deletedIndexes = nil
     }
     
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {

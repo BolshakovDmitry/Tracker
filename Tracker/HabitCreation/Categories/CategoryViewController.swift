@@ -176,8 +176,6 @@ extension CategoryViewController: NewCategoryDelegate {
         tableView.reloadData()
         delegateCoreData?.addCategory(with: newCategory)
         
-        // Обновляем видимость заглушки
-        updatePlaceholderVisibility()
     }
 }
 

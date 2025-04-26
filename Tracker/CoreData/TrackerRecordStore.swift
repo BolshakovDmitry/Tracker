@@ -12,7 +12,7 @@ protocol TrackerRecordStoreProtocol {
     func countCompletedDays(id: UUID) -> Int
 }
 
-class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
+final class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
     // MARK: - Properties
     
     private let context: NSManagedObjectContext
@@ -21,7 +21,11 @@ class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
     // MARK: - Initialization
     
     convenience init(delegate: TrackerRecordStoreDelegate) {
-        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            assertionFailure("Не удалось привести UIApplication.shared.delegate к AppDelegate")
+            fatalError()
+        }
+        let context = appDelegate.persistentContainer.viewContext
         self.init(context: context, delegate: delegate)
     }
     
@@ -198,6 +202,9 @@ extension Calendar {
         var components = DateComponents()
         components.day = 1
         components.second = -1
-        return self.date(byAdding: components, to: startOfDay(for: date))!
+        guard let resultDate = self.date(byAdding: components, to: startOfDay(for: date)) else {
+            return startOfDay(for: date)
+        }
+        return resultDate
     }
 }

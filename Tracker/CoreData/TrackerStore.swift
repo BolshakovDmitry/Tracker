@@ -45,8 +45,12 @@ class TrackerStore: NSObject {
     // MARK: - Initialization
     
     convenience init(delegate: TrackerStoreDelegate) {
-        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-        self.init(context: context, delegate: delegate)
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            fatalError("App delegate not found or not of type AppDelegate")
+         }
+         
+         let context = appDelegate.persistentContainer.viewContext
+         self.init(context: context, delegate: delegate)
     }
     
     init(context: NSManagedObjectContext, delegate: TrackerStoreDelegate?) {
@@ -154,7 +158,7 @@ class TrackerStore: NSObject {
             }.filter { !$0.trackers.isEmpty }
         }
         for item in visibleCategories {
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!visibleCategories at the moment", item)
+            
         }
         
     }

@@ -500,11 +500,13 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {
-            let headerView = collectionView.dequeueReusableSupplementaryView(
+            guard let headerView = collectionView.dequeueReusableSupplementaryView(
                 ofKind: kind,
                 withReuseIdentifier: "HeaderView",
                 for: indexPath
-            ) as! TrackerHeaderView
+            ) as? TrackerHeaderView else {
+                return UICollectionReusableView()
+            }
             
             let title = indexPath.section == 0 ? "Emoji" : "Цвет"
             headerView.configure(with: title)

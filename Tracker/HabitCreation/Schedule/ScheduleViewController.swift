@@ -65,8 +65,8 @@ final class ScheduleViewController: UIViewController {
         
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: CGFloat.leastNonzeroMagnitude))
     }
-   
-
+    
+    
     
     private func setupActions() {
         doneButton.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
@@ -85,7 +85,8 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "DaySelectionCell", for: indexPath) as! DaySelectionCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "DaySelectionCell", for: indexPath) as? DaySelectionCell
+        else { return UITableViewCell() }
         let weekDay = WeekDay.allCases[indexPath.row]
         let isSelected = selectedDays.contains(weekDay)
         cell.configure(with: weekDay.localizedName, isSelected: isSelected)
@@ -110,12 +111,12 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-    
+        
         if indexPath.row == WeekDay.allCases.count - 1 {
- 
+            
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         } else {
-
+            
             cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
     }
