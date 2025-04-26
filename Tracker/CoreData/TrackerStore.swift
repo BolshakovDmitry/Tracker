@@ -241,7 +241,7 @@ class TrackerStore: NSObject {
 
 // MARK: - HabitCreationViewControllerDelegate
 
-extension TrackerStore: HabitCreationVCDelegate {
+extension TrackerStore: HabitCreationViewControllerDelegate {
     func didCreateTracker(tracker: Tracker, category: String) {
         
         // 1. Находим категорию по имени

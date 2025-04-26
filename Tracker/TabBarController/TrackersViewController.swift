@@ -4,11 +4,13 @@ protocol habitCreationVCDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to categoryTitle: String)
 }
 
-final class TrackersViewController: UIViewController {
+final class TrackersViewController: UIViewController, HabitCreationViewControllerDelegate {
+    func didCreateTracker(tracker: Tracker, category: String) {
+    }
+    
     
     // MARK: - public fields
     
-    private var dataManager = DataManager.shared
     var delegateCoreData: TrackerStoreProtocol?
     var delegateCellCoreData: TrackerRecordStoreProtocol?
     
@@ -203,89 +205,7 @@ final class TrackersViewController: UIViewController {
             placeholderStackView.isHidden = false
         }
     }
-    
-    
-    private func filterTrackers(by weekday: Int, searchText: String? = nil) {
-        
-        if searchText == nil {
-            // Фильтруем по дням недели
-            let filteredCategories = dataManager.categories.map { category in
-                TrackerCategory(title: category.title,
-                                trackers: category.trackers.filter { tracker in
-                    tracker.schedule.contains { weekDay in
-                        weekDay.numberValue == weekday
-                    }
-                })
-            }.filter { !$0.trackers.isEmpty }
-            dataManager.visibleCategories = filteredCategories
-        } else {
-            
-            // Дополнительная фильтрация по тексту, если он предоставлен
-            if let text = searchText, !text.isEmpty {
-                let filteredCategoriesByDateAndTextField = dataManager.categories.map { category in
-                    TrackerCategory(title: category.title,
-                                    trackers: category.trackers.filter { tracker in
-                        tracker.name.lowercased().contains(text.lowercased()) && tracker.schedule.contains { weekDay in
-                            weekDay.numberValue == weekday
-                        }
-                    })
-                }.filter { !$0.trackers.isEmpty }
-                dataManager.visibleCategories = filteredCategoriesByDateAndTextField
-            }
-            
-        }
-        
-        
-        // Анимируем изменение прозрачности
-        UIView.animate(withDuration: 0.3, animations: {
-            self.trackersCollectionView.alpha = 0
-        }, completion: { _ in
-            self.trackersCollectionView.reloadData()
-            UIView.animate(withDuration: 0.3) {
-                self.trackersCollectionView.alpha = 1
-            }
-        })
-    }
-    
-}
-
-
-// MARK: - habitCreationViewControllerDelegate
-
-extension TrackersViewController: habitCreationVCDelegate {
-    func addTracker(_ tracker: Tracker, to categoryTitle: String) {
-        var newCategories = [TrackerCategory]()
-        var categoryExists = false
-        
-        for category in dataManager.visibleCategories {
-            if category.title == categoryTitle {
-                // Создаем новый массив трекеров с добавленным трекером
-                let newTrackers = category.trackers + [tracker]
-                // Создаем новую категорию с обновленным массивом
-                let newCategory = TrackerCategory(title: category.title, trackers: newTrackers)
-                newCategories.append(newCategory)
-                categoryExists = true
-            } else {
-                // Оставляем категорию без изменений
-                newCategories.append(category)
-            }
-        }
-        
-        // Если категории не существует, создаем новую
-        if !categoryExists {
-            let newCategory = TrackerCategory(title: categoryTitle, trackers: [tracker])
-            newCategories.append(newCategory)
-        }
-        
-        // обновляем массивы в датаменеджер
-        dataManager.updateCategories(with: newCategories)
-        
-        // Обновляем интерфейс
-        trackersCollectionView.reloadData()
-        
-    }
-    
-    
+   
 }
 
 // MARK: - UICollectionViewDataSource
@@ -416,6 +336,7 @@ extension TrackersViewController: TrackerCellDelegate {
 extension TrackersViewController: TrackerStoreDelegate {
     func didUpdate(category: TrackerUpdate) {
         trackersCollectionView.reloadData()
+        updatePlaceholderVisibility()
     }
     
 }

@@ -16,7 +16,7 @@ final class CategoryViewController: UIViewController {
     
     var delegateCoreData: CategoryViewControllerDelegate?
     weak var delegate: CategorySelectionDelegate?
-    private var dataManager = DataManager.shared
+    
     
     // MARK: - UI Elements
     
@@ -149,7 +149,8 @@ final class CategoryViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func addCategoryButtonTapped() {
-        let newCategoryVC = NewCategory()
+        let categoryStore = TrackerCategoryStore(delegate: self)
+        let newCategoryVC = NewCategory(categoryStore: categoryStore)
         newCategoryVC.delegate = self
         newCategoryVC.modalPresentationStyle = .pageSheet
         present(newCategoryVC, animated: true)
@@ -168,13 +169,11 @@ final class CategoryViewController: UIViewController {
 extension CategoryViewController: NewCategoryDelegate {
     func didCreateCategory(_ categoryName: String) {
         let newCategory = TrackerCategory(title: categoryName, trackers: [])
-        var updatedCategories = dataManager.categories
-        updatedCategories.append(newCategory)
-        dataManager.categories = updatedCategories
         
         // Обновляем таблицу
-        tableView.reloadData()
+        
         delegateCoreData?.addCategory(with: newCategory)
+        tableView.reloadData()
         
     }
 }

@@ -4,7 +4,7 @@ protocol ScheduleSelectionDelegate: AnyObject {
     func didSelectSchedule(_ schedule: [WeekDay])
 }
 
-protocol HabitCreationVCDelegate: AnyObject {
+protocol HabitCreationViewControllerDelegate: AnyObject {
     func didCreateTracker(tracker: Tracker, category: String)
 }
 

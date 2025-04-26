@@ -14,7 +14,7 @@ final class MainTabBarController: UITabBarController {
     
     private func setupTabBar() {
         // Настраиваем внешний вид TabBar
-        tabBar.tintColor = UIColor(named: "YP Blue") // Используем цвет из ассетов или указываем другой
+        tabBar.tintColor = UIColor(named: "YP Blue") 
         tabBar.backgroundColor = .white
         tabBar.layer.borderWidth = 0.5
         tabBar.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.3).cgColor

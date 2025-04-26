@@ -128,9 +128,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
         
-        if tracker.type == .irregularEvent {
-             dayCountLabel.text = ""
-         } else if daysCompleted == 1 {
+         if daysCompleted == 1 {
              dayCountLabel.text = "1 день"
          } else if daysCompleted >= 2 && daysCompleted <= 4 {
              dayCountLabel.text = "\(daysCompleted) дня"
