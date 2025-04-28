@@ -14,7 +14,7 @@ final class MainTabBarController: UITabBarController {
     
     private func setupTabBar() {
         // Настраиваем внешний вид TabBar
-        tabBar.tintColor = UIColor(named: "YP Blue") // Используем цвет из ассетов или указываем другой
+        tabBar.tintColor = UIColor(named: "YP Blue") 
         tabBar.backgroundColor = .white
         tabBar.layer.borderWidth = 0.5
         tabBar.layer.borderColor = UIColor.lightGray.withAlphaComponent(0.3).cgColor
@@ -23,6 +23,11 @@ final class MainTabBarController: UITabBarController {
     private func setupViewControllers() {
         // Создаем контроллер для вкладки "Трекеры"
         let trackersVC = TrackersViewController()
+        let trackerStore = TrackerStore(delegate: trackersVC)
+        let trackerRecordStore = TrackerRecordStore(delegate: trackersVC)
+        trackersVC.delegateCoreData = trackerStore
+        trackersVC.delegateCellCoreData = trackerRecordStore
+        
         let trackersNavController = UINavigationController(rootViewController: trackersVC)
         trackersNavController.tabBarItem = UITabBarItem(
             title: "Трекеры",

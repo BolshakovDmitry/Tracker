@@ -10,11 +10,10 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
-    // Добавляем отдельный вью для рамки выделения
     private let selectionBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 1.0) // Цвет E6E8EB
-        view.layer.cornerRadius = 12 // Немного больше, чем у ячейки
+        view.backgroundColor = UIColor(named: "CustomLightGrey")
+        view.layer.cornerRadius = 16
         view.isHidden = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -35,25 +34,24 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // Обновляем размер рамки выделения, чтобы она точно обрамляла ячейку
-        selectionBackgroundView.frame = bounds.insetBy(dx: -4, dy: -4)
-    }
-    
     private func setupUI() {
         backgroundColor = .white
         layer.cornerRadius = 8
-        
-        // Сначала добавляем фон для выделения, чтобы он был под ячейкой
-        insertSubview(selectionBackgroundView, at: 0)
+    
+        addSubview(selectionBackgroundView)
         contentView.addSubview(emojiLabel)
-        
+    
         NSLayoutConstraint.activate([
+            selectionBackgroundView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            selectionBackgroundView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            selectionBackgroundView.widthAnchor.constraint(equalToConstant: 52),
+            selectionBackgroundView.heightAnchor.constraint(equalToConstant: 52),
+            
             emojiLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             emojiLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
+        
+        sendSubviewToBack(selectionBackgroundView)
     }
     
     func configure(with emoji: String) {
@@ -62,18 +60,5 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
     
     private func updateSelectedState() {
         selectionBackgroundView.isHidden = !isSelected
-        
-        // Позиционируем рамку выделения
-        if isSelected {
-            // Подгоняем размер и позицию вью выделения
-            selectionBackgroundView.frame = bounds.insetBy(dx: -4, dy: -4)
-            selectionBackgroundView.center = CGPoint(
-                x: bounds.midX,
-                y: bounds.midY
-            )
-            
-            // Применяем трансформацию для добавления эффекта "находится под ячейкой"
-            bringSubviewToFront(contentView)
-        }
     }
 }

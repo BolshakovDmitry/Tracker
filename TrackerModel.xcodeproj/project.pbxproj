@@ -24,32 +24,32 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F42483E02D95D161008E4D52 /* Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F42483F62D95D162008E4D52 /* TrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F42484002D95D162008E4D52 /* TrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F42483E02D95D161008E4D52 /* TrackerModel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrackerModel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F42483F62D95D162008E4D52 /* TrackerModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackerModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F42484002D95D162008E4D52 /* TrackerModelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackerModelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F42484082D95D162008E4D52 /* Exceptions for "Tracker" folder in "Tracker" target */ = {
+		F42484082D95D162008E4D52 /* Exceptions for "Tracker" folder in "TrackerModel" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = F42483DF2D95D161008E4D52 /* Tracker */;
+			target = F42483DF2D95D161008E4D52 /* TrackerModel */;
 		};
-		F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerTests" target */ = {
+		F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				HabitCreation/Schedule/ScheduleViewController.swift,
 			);
-			target = F42483F52D95D162008E4D52 /* TrackerTests */;
+			target = F42483F52D95D162008E4D52 /* TrackerModelTests */;
 		};
-		F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerUITests" target */ = {
+		F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				HabitCreation/Schedule/ScheduleViewController.swift,
 			);
-			target = F42483FF2D95D162008E4D52 /* TrackerUITests */;
+			target = F42483FF2D95D162008E4D52 /* TrackerModelUITests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -57,9 +57,9 @@
 		F42483E22D95D161008E4D52 /* Tracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F42484082D95D162008E4D52 /* Exceptions for "Tracker" folder in "Tracker" target */,
-				F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerTests" target */,
-				F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerUITests" target */,
+				F42484082D95D162008E4D52 /* Exceptions for "Tracker" folder in "TrackerModel" target */,
+				F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelTests" target */,
+				F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelUITests" target */,
 			);
 			path = Tracker;
 			sourceTree = "<group>";
@@ -114,9 +114,9 @@
 		F42483E12D95D161008E4D52 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F42483E02D95D161008E4D52 /* Tracker.app */,
-				F42483F62D95D162008E4D52 /* TrackerTests.xctest */,
-				F42484002D95D162008E4D52 /* TrackerUITests.xctest */,
+				F42483E02D95D161008E4D52 /* TrackerModel.app */,
+				F42483F62D95D162008E4D52 /* TrackerModelTests.xctest */,
+				F42484002D95D162008E4D52 /* TrackerModelUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,9 +124,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F42483DF2D95D161008E4D52 /* Tracker */ = {
+		F42483DF2D95D161008E4D52 /* TrackerModel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F42484092D95D162008E4D52 /* Build configuration list for PBXNativeTarget "Tracker" */;
+			buildConfigurationList = F42484092D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModel" */;
 			buildPhases = (
 				F42483DC2D95D161008E4D52 /* Sources */,
 				F42483DD2D95D161008E4D52 /* Frameworks */,
@@ -139,16 +139,16 @@
 			fileSystemSynchronizedGroups = (
 				F42483E22D95D161008E4D52 /* Tracker */,
 			);
-			name = Tracker;
+			name = TrackerModel;
 			packageProductDependencies = (
 			);
 			productName = Tracker;
-			productReference = F42483E02D95D161008E4D52 /* Tracker.app */;
+			productReference = F42483E02D95D161008E4D52 /* TrackerModel.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F42483F52D95D162008E4D52 /* TrackerTests */ = {
+		F42483F52D95D162008E4D52 /* TrackerModelTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F424840E2D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerTests" */;
+			buildConfigurationList = F424840E2D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModelTests" */;
 			buildPhases = (
 				F42483F22D95D162008E4D52 /* Sources */,
 				F42483F32D95D162008E4D52 /* Frameworks */,
@@ -162,16 +162,16 @@
 			fileSystemSynchronizedGroups = (
 				F42483F92D95D162008E4D52 /* TrackerTests */,
 			);
-			name = TrackerTests;
+			name = TrackerModelTests;
 			packageProductDependencies = (
 			);
 			productName = TrackerTests;
-			productReference = F42483F62D95D162008E4D52 /* TrackerTests.xctest */;
+			productReference = F42483F62D95D162008E4D52 /* TrackerModelTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		F42483FF2D95D162008E4D52 /* TrackerUITests */ = {
+		F42483FF2D95D162008E4D52 /* TrackerModelUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F42484112D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerUITests" */;
+			buildConfigurationList = F42484112D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModelUITests" */;
 			buildPhases = (
 				F42483FC2D95D162008E4D52 /* Sources */,
 				F42483FD2D95D162008E4D52 /* Frameworks */,
@@ -185,11 +185,11 @@
 			fileSystemSynchronizedGroups = (
 				F42484032D95D162008E4D52 /* TrackerUITests */,
 			);
-			name = TrackerUITests;
+			name = TrackerModelUITests;
 			packageProductDependencies = (
 			);
 			productName = TrackerUITests;
-			productReference = F42484002D95D162008E4D52 /* TrackerUITests.xctest */;
+			productReference = F42484002D95D162008E4D52 /* TrackerModelUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -215,7 +215,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F42483DB2D95D161008E4D52 /* Build configuration list for PBXProject "Tracker" */;
+			buildConfigurationList = F42483DB2D95D161008E4D52 /* Build configuration list for PBXProject "TrackerModel" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -229,9 +229,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F42483DF2D95D161008E4D52 /* Tracker */,
-				F42483F52D95D162008E4D52 /* TrackerTests */,
-				F42483FF2D95D162008E4D52 /* TrackerUITests */,
+				F42483DF2D95D161008E4D52 /* TrackerModel */,
+				F42483F52D95D162008E4D52 /* TrackerModelTests */,
+				F42483FF2D95D162008E4D52 /* TrackerModelUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -287,12 +287,12 @@
 /* Begin PBXTargetDependency section */
 		F42483F82D95D162008E4D52 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F42483DF2D95D161008E4D52 /* Tracker */;
+			target = F42483DF2D95D161008E4D52 /* TrackerModel */;
 			targetProxy = F42483F72D95D162008E4D52 /* PBXContainerItemProxy */;
 		};
 		F42484022D95D162008E4D52 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F42483DF2D95D161008E4D52 /* Tracker */;
+			target = F42483DF2D95D161008E4D52 /* TrackerModel */;
 			targetProxy = F42484012D95D162008E4D52 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -483,7 +483,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tracker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TrackerModel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TrackerModel";
 			};
 			name = Debug;
 		};
@@ -501,7 +501,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tracker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TrackerModel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TrackerModel";
 			};
 			name = Release;
 		};
@@ -540,7 +540,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F42483DB2D95D161008E4D52 /* Build configuration list for PBXProject "Tracker" */ = {
+		F42483DB2D95D161008E4D52 /* Build configuration list for PBXProject "TrackerModel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F424840C2D95D162008E4D52 /* Debug */,
@@ -549,7 +549,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F42484092D95D162008E4D52 /* Build configuration list for PBXNativeTarget "Tracker" */ = {
+		F42484092D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F424840A2D95D162008E4D52 /* Debug */,
@@ -558,7 +558,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F424840E2D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerTests" */ = {
+		F424840E2D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModelTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F424840F2D95D162008E4D52 /* Debug */,
@@ -567,7 +567,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F42484112D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerUITests" */ = {
+		F42484112D95D162008E4D52 /* Build configuration list for PBXNativeTarget "TrackerModelUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F42484122D95D162008E4D52 /* Debug */,

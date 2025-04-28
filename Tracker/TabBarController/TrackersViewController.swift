@@ -1,15 +1,18 @@
 import UIKit
 
-protocol habitCreationViewControllerDelegate: AnyObject {
+protocol habitCreationVCDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to categoryTitle: String)
 }
 
-final class TrackersViewController: UIViewController {
+final class TrackersViewController: UIViewController, HabitCreationViewControllerDelegate {
+    func didCreateTracker(tracker: Tracker, category: String) {
+    }
+    
     
     // MARK: - public fields
     
-    private var dataManager = DataManager.shared
-    
+    var delegateCoreData: TrackerStoreProtocol?
+    var delegateCellCoreData: TrackerRecordStoreProtocol?
     
     // Выполненные трекеры
     var completedTrackers: [TrackerRecord] = []
@@ -25,15 +28,33 @@ final class TrackersViewController: UIViewController {
         return picker
     }()
     
-    private var placeholderImageView: UIImageView = {
+    private let placeholderStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 10
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.isHidden = true
+        return stackView
+    }()
+    
+    private let placeholderImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "emptyTrackers")
         imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.clipsToBounds = true
-        imageView.isHidden = true
         return imageView
-        
+    }()
+    
+    private let placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Что будем отслеживать?"
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .black
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private lazy var searchTextField: UISearchTextField = {
@@ -89,49 +110,50 @@ final class TrackersViewController: UIViewController {
         setupNavigationBar()
         reloadTableWithActualDayTrackers()
         searchTextField.becomeFirstResponder()
-        if dataManager.categories.isEmpty {
-            placeholderImageView.isHidden = false
-        }
+        updatePlaceholderVisibility()
     }
-        
+    
     // MARK: - Setup UI
     
     private func setupUI() {
         view.backgroundColor = .white
         
-        // Добавляем коллекцию на экран
+        // Добавляем элементы в стек
+        placeholderStackView.addArrangedSubview(placeholderImageView)
+        placeholderStackView.addArrangedSubview(placeholderLabel)
+        
+        // Добавляем элементы на экран
         view.addSubview(trackersCollectionView)
         view.addSubview(searchTextField)
-        view.addSubview(placeholderImageView)
+        view.addSubview(placeholderStackView)
         
         // Настраиваем констрейнты
         NSLayoutConstraint.activate([
             searchTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-        ])
-        NSLayoutConstraint.activate([
-            placeholderImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            placeholderImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-           // placeholderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-           // placeholderImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-        NSLayoutConstraint.activate([
+            
+            // Констрейнты для стека с заглушкой
+            placeholderStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            placeholderStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            // Задаем размеры для изображения
+            placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
+            placeholderImageView.heightAnchor.constraint(equalToConstant: 80),
+            
             trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
             trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         
-        
         datePicker.addTarget(self, action: #selector(dateChanged(_:)), for: .valueChanged)
-        
     }
     
     private func reloadTableWithActualDayTrackers() {
         dateChanged(datePicker)
     }
-        
+    
     private func setupNavigationBar() {
         // Настраиваем заголовок
         title = "Трекеры"
@@ -156,7 +178,7 @@ final class TrackersViewController: UIViewController {
     
     @objc private func addButtonTapped() {
         // Создаем новый экран выбора типа трекера
-        let trackerTypesVC = TrackerTypesViewController()
+        let trackerTypesVC = TrackerTypesViewController(delegate: delegateCoreData)
         
         // Устанавливаем себя в качестве делегата для нового экрана
         trackerTypesVC.trackerViewControllerDelegate = self
@@ -172,133 +194,48 @@ final class TrackersViewController: UIViewController {
         let calendar = Calendar.current
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        filterTrackers(by: chosenDay)
+        delegateCoreData?.filterCategories(by: chosenDay, searchText: nil)
     }
-
-    // Добавьте отдельный метод для фильтрации:
-    private func filterTrackers(by weekday: Int, searchText: String? = nil) {
-        
-        if searchText == nil {
-            // Фильтруем по дням недели
-            let filteredCategories = dataManager.categories.map { category in
-                TrackerCategory(title: category.title,
-                                trackers: category.trackers.filter { tracker in
-                    tracker.schedule.contains { weekDay in
-                        weekDay.numberValue == weekday
-                    }
-                })
-            }.filter { !$0.trackers.isEmpty }
-            dataManager.visibleCategories = filteredCategories
+    
+    
+    private func updatePlaceholderVisibility() {
+        if let numberOfSections = delegateCoreData?.numberOfSections, numberOfSections > 0 {
+            placeholderStackView.isHidden = true
         } else {
-            
-            // Дополнительная фильтрация по тексту, если он предоставлен
-            if let text = searchText, !text.isEmpty {
-                let filteredCategoriesByDateAndTextField = dataManager.categories.map { category in
-                    TrackerCategory(title: category.title,
-                                    trackers: category.trackers.filter { tracker in
-                        tracker.name.lowercased().contains(text.lowercased()) && tracker.schedule.contains { weekDay in
-                            weekDay.numberValue == weekday
-                        }
-                    })
-                }.filter { !$0.trackers.isEmpty }
-                dataManager.visibleCategories = filteredCategoriesByDateAndTextField
-            }
-            
-        }
-        
-        
-        // Анимируем изменение прозрачности
-        UIView.animate(withDuration: 0.3, animations: {
-            self.trackersCollectionView.alpha = 0
-        }, completion: { _ in
-            self.trackersCollectionView.reloadData()
-            UIView.animate(withDuration: 0.3) {
-                self.trackersCollectionView.alpha = 1
-            }
-        })
-    }
-    
-    
-}
-
-// MARK: - habitCreationViewControllerDelegate
-
-extension TrackersViewController: habitCreationViewControllerDelegate {
-    func addTracker(_ tracker: Tracker, to categoryTitle: String) {
-        var newCategories = [TrackerCategory]()
-        var categoryExists = false
-        
-        for category in dataManager.visibleCategories {
-            if category.title == categoryTitle {
-                // Создаем новый массив трекеров с добавленным трекером
-                let newTrackers = category.trackers + [tracker]
-                // Создаем новую категорию с обновленным массивом
-                let newCategory = TrackerCategory(title: category.title, trackers: newTrackers)
-                newCategories.append(newCategory)
-                categoryExists = true
-            } else {
-                // Оставляем категорию без изменений
-                newCategories.append(category)
-            }
-        }
-        
-        // Если категории не существует, создаем новую
-        if !categoryExists {
-            let newCategory = TrackerCategory(title: categoryTitle, trackers: [tracker])
-            newCategories.append(newCategory)
-        }
-        
-        // обновляем массивы в датаменеджер
-        dataManager.updateCategories(with: newCategories)
-        
-        // Обновляем интерфейс
-        trackersCollectionView.reloadData()
-        
-        print("Категории после добавления:", dataManager.visibleCategories)
-    }
-    
-    // Метод для обновления интерфейса после изменения категорий
-    private func updateUI() {
-        if dataManager.visibleCategories.isEmpty {
-            // Показываем заглушку, если категорий нет
-            
-            trackersCollectionView.isHidden = true
-        } else {
-            // Скрываем заглушку и показываем коллекцию
-            print("in the updateUI in tracker condition")
-            //showEmptyState(false)
-            //trackersCollectionView.isHidden = false
-            trackersCollectionView.reloadData()
+            placeholderStackView.isHidden = false
         }
     }
+   
 }
 
 // MARK: - UICollectionViewDataSource
 extension TrackersViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return dataManager.visibleCategories.count
+        return delegateCoreData?.numberOfSections ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return dataManager.visibleCategories[section].trackers.count
+        return delegateCoreData?.numberOfRowsInSection(section) ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as! TrackerCollectionViewCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as? TrackerCollectionViewCell
+        else { return UICollectionViewCell() }
         
-        let tracker = dataManager.visibleCategories[indexPath.section].trackers[indexPath.item]
-
+        if let tracker = delegateCoreData?.object(at: indexPath) {
+            
+            
+            // Проверяем, выполнен ли трекер сегодня
+            let isCompleted = delegateCellCoreData?.isTrackerCompletedToday(id: tracker.id, date: datePicker.date) ?? false
+            
+            cell.delegate = self
+            
+            // Подсчитываем количество выполненных дней
+            let daysCompleted = delegateCellCoreData?.countCompletedDays(id: tracker.id) ?? 0
+            
+            cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
+        }
         
-        let isCompleted = checkIsCompletedToday(id: tracker.id)
-        
-        cell.delegate = self
-        
-        let daysCompleted = completedTrackers.filter { currentTracker in
-            currentTracker.id == tracker.id
-        }.count
-        
-        cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
-    
         return cell
     }
     
@@ -307,7 +244,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         completedTrackers.contains { trackerRecord in
             let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-             return trackerRecord.id == id && isSameDay
+            return trackerRecord.id == id && isSameDay
         }
     }
     
@@ -319,12 +256,20 @@ extension TrackersViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as! TrackerHeaderView
             
-            headerView.configure(with: dataManager.visibleCategories[indexPath.section].title)
+            // Получаем название секции из delegateCoreData
+            if let sectionTitle = delegateCoreData?.sectionTitle(for: indexPath.section) {
+                headerView.configure(with: sectionTitle)
+            } else {
+                // Запасной вариант, если метод не реализован или вернул nil
+                headerView.configure(with: "Секция \(indexPath.section + 1)")
+            }
+            
             return headerView
         }
         
         return UICollectionReusableView()
     }
+    
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
@@ -352,44 +297,59 @@ extension TrackersViewController: UITextFieldDelegate {
         let calendar = Calendar.current
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        filterTrackers(by: chosenDay, searchText: textField.text)
+        delegateCoreData?.filterCategories(by: chosenDay, searchText: textField.text)
         return true
     }
 }
 
+// MARK: - Cell Delegate
+
 extension TrackersViewController: TrackerCellDelegate {
-    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath) {
+    func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath, type: TrackerType) {
         // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
-                let calendar = Calendar.current
-                let today = Date()
-                
-                // Сравниваем даты с помощью Calendar
-                // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
-                let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
-                
-                if comparison == .orderedDescending {
-               
-               AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
-               // Если дата в будущем, показываем предупреждение и отменяем действие
-               
-               // Перезагружаем ячейку, чтобы вернуть её в предыдущее состояние
-               trackersCollectionView.reloadItems(at: [indexPath])
-               return
-           }
-           
-           // Если дата не в будущем, обрабатываем обычным образом
-           if isComplete {
-               let newTracker = TrackerRecord(id: id, date: datePicker.date)
-               completedTrackers.append(newTracker)
-               trackersCollectionView.reloadItems(at: [indexPath])
-           } else {
-               completedTrackers.removeAll { trackerRecord in
-                   let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-                   return trackerRecord.id == id && isSameDay
-               }
-               trackersCollectionView.reloadItems(at: [indexPath])
-           }
-       }
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Сравниваем даты с помощью Calendar
+        // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
+        let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
+        
+        if comparison == .orderedDescending {
+            
+            AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
+            // Если дата в будущем, показываем предупреждение и отменяем действие
+            
+            return
+        }
+        
+        let tracker = TrackerRecord(id: id, date: datePicker.date)
+        
+        if isComplete {
+            delegateCellCoreData?.isDoneTapped(tracker: tracker, trackerType: type)
+        } else {
+            delegateCellCoreData?.unDoneTapped(tracker: tracker, trackerType: type)
+        }
+        
+    }
 }
 
+extension TrackersViewController: TrackerStoreDelegate {
+    func didUpdate(category: TrackerUpdate) {
+        trackersCollectionView.reloadData()
+        updatePlaceholderVisibility()
+    }
+    
+}
+
+
+extension TrackersViewController: TrackerRecordStoreDelegate {
+    func didUpdate() {
+        delegateCoreData?.loadAllCategories()
+        delegateCoreData?.filterVisibleCategories()
+        trackersCollectionView.reloadData()
+        updatePlaceholderVisibility()
+    }
+    
+    
+}
 

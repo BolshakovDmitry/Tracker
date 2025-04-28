@@ -10,8 +10,18 @@ final class NewCategory: UIViewController {
     
     weak var delegate: NewCategoryDelegate?
     private let minCategoryNameLength = 4
-    private let dataManager = DataManager.shared
     private let alertPresenter = AlertPresenter.shared
+    private let categoryStore: TrackerCategoryStore
+    
+    // Обновите инициализатор (или добавьте его, если его нет)
+    init(categoryStore: TrackerCategoryStore) {
+        self.categoryStore = categoryStore
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - UI Elements
     
@@ -26,7 +36,7 @@ final class NewCategory: UIViewController {
     
     private lazy var categoryNameTextField: UITextField = {
         let textfield = UITextField()
-        textfield.backgroundColor = .ypGrey
+        textfield.backgroundColor = UIColor(named: "CustomBackgroundDay")
         textfield.textColor = .black
         textfield.translatesAutoresizingMaskIntoConstraints = false
         textfield.layer.cornerRadius = 16
@@ -114,12 +124,13 @@ final class NewCategory: UIViewController {
             return
         }
         
-        // Проверяем, существует ли категория с таким же названием
-        let isSameCategoryTitle = dataManager.categories.reduce(false) { result, category in
-            return result || category.title == categoryName
-        }
+        // Получаем существующие категории из CoreData
+        let existingCategories = categoryStore.fetchCategories()
         
-        if isSameCategoryTitle { 
+        // Проверяем, существует ли категория с таким же названием
+        let categoryExists = existingCategories.contains { $0.title == categoryName }
+        
+        if categoryExists {
             alertPresenter.showAlert(with: "Ошибка", with: "Данная категория уже есть", show: self)
             return
         }
