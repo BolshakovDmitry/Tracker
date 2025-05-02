@@ -1,6 +1,4 @@
-
 import UIKit
-
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -10,11 +8,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        //let onboardingPageVC = OnboardingPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-        let mainTabBarController = MainTabBarController()
-        window.rootViewController = mainTabBarController
+        let onboardingPageVC = OnboardingPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+        // Используем созданный экземпляр, а не класс
+        window.rootViewController = onboardingPageVC
+        
         window.makeKeyAndVisible()
         self.window = window
     }
 }
-

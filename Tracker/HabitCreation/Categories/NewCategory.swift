@@ -13,7 +13,6 @@ final class NewCategory: UIViewController {
     private let alertPresenter = AlertPresenter.shared
     private let categoryStore: TrackerCategoryStore
     
-    // Обновите инициализатор (или добавьте его, если его нет)
     init(categoryStore: TrackerCategoryStore) {
         self.categoryStore = categoryStore
         super.init(nibName: nil, bundle: nil)

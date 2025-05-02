@@ -41,6 +41,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				HabitCreation/Schedule/ScheduleViewController.swift,
+				"PageControls/OnboardingPageViewController 2.swift",
+				PageControls/OnboardingPageViewController.swift,
+				"PageControls/SplashViewController 2.swift",
+				PageControls/SplashViewController.swift,
 			);
 			target = F42483F52D95D162008E4D52 /* TrackerModelTests */;
 		};
@@ -48,6 +52,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				HabitCreation/Schedule/ScheduleViewController.swift,
+				"PageControls/OnboardingPageViewController 2.swift",
+				PageControls/OnboardingPageViewController.swift,
+				"PageControls/SplashViewController 2.swift",
+				PageControls/SplashViewController.swift,
 			);
 			target = F42483FF2D95D162008E4D52 /* TrackerModelUITests */;
 		};
