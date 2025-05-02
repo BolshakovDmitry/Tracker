@@ -9,7 +9,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let window = UIWindow(windowScene: windowScene)
         let onboardingPageVC = OnboardingPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-        // Используем созданный экземпляр, а не класс
+        
         window.rootViewController = onboardingPageVC
         
         window.makeKeyAndVisible()

@@ -1,22 +1,30 @@
 import UIKit
 
-protocol CategorySelectionDelegate: AnyObject {
+protocol CategoriesSelectionDelegate: AnyObject {
     func didSelectCategory(_ category: String)
 }
 
-protocol CategoryViewControllerDelegate: AnyObject {
+protocol CategoriesViewControllerDelegate: AnyObject {
     func addCategory(with category: TrackerCategory)
     func numberOfRowsInSection(_ section: Int) -> Int
     func object(at indexPath: IndexPath) -> TrackerCategory?
 }
 
-final class CategoryViewController: UIViewController {
+final class CategoriesViewController: UIViewController {
+    
+    init(viewModel: CategoriesViewModel){
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - Properties
     
-    var delegateCoreData: CategoryViewControllerDelegate?
-    weak var delegate: CategorySelectionDelegate?
-    private lazy var categoryStore = TrackerCategoryStore(delegate: self)
+    var delegate: CategoriesSelectionDelegate?
+    private var viewModel: CategoriesViewModel
     
     
     // MARK: - UI Elements
@@ -92,6 +100,7 @@ final class CategoryViewController: UIViewController {
         setupTableView()
         setupActions()
         updatePlaceholderVisibility()
+        setupBindings()
     }
     
     // MARK: - Setup UI
@@ -147,12 +156,31 @@ final class CategoryViewController: UIViewController {
         addButton.addTarget(self, action: #selector(addCategoryButtonTapped), for: .touchUpInside)
     }
     
+    private func setupBindings() {
+        // Подписываемся на обновления категорий
+        viewModel.onCategoryUpdate = { [weak self] update in
+            guard let self = self else { return }
+            
+            print("Контроллер получил обновление таблицы")
+            
+            self.tableView.performBatchUpdates {
+                let insertedIndexPaths = update.insertedIndexes.map { IndexPath(item: $0, section: 0) }
+                let deletedIndexPaths = update.deletedIndexes.map { IndexPath(item: $0, section: 0) }
+                
+                self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
+                self.tableView.deleteRows(at: deletedIndexPaths, with: .fade)
+            }
+            
+            // Обновляем видимость заглушки после изменений
+            self.updatePlaceholderVisibility()
+        }
+    }
+    
     // MARK: - Actions
     
     @objc private func addCategoryButtonTapped() {
-        //let categoryStore = TrackerCategoryStore(delegate: self)
-        let newCategoryVC = NewCategory(categoryStore: categoryStore)
-        newCategoryVC.delegate = self
+        let newCategoryVC = NewCategoryViewController()
+        newCategoryVC.delegate = viewModel
         newCategoryVC.modalPresentationStyle = .pageSheet
         present(newCategoryVC, animated: true)
     }
@@ -160,33 +188,21 @@ final class CategoryViewController: UIViewController {
     // MARK: - Helpers
     
     private func updatePlaceholderVisibility() {
-        let categoriesCount = delegateCoreData?.numberOfRowsInSection(0) ?? 0
-        placeholderStackView.isHidden = categoriesCount > 0
-    }
-}
-
-// MARK: - NewCategoryDelegate
-
-extension CategoryViewController: NewCategoryDelegate {
-    func didCreateCategory(_ categoryName: String) {
-        let newCategory = TrackerCategory(title: categoryName, trackers: [])
-        
-        // Обновляем таблицу
-        
-        delegateCoreData?.addCategory(with: newCategory)
+        placeholderStackView.isHidden = viewModel.hasCategories()
     }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
 
-extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
+extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        delegateCoreData?.numberOfRowsInSection(section) ?? 0
+        
+        return viewModel.model?.numberOfRowsInSection(section) ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let record = delegateCoreData?.object(at: indexPath) else { return UITableViewCell() }
+        guard let record = viewModel.getObject(indexPath: indexPath) else { return UITableViewCell() }
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         cell.textLabel?.text = record.title
         return cell
@@ -194,7 +210,7 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard let selectedCategory = delegateCoreData?.object(at: indexPath)?.title else { return }
+        guard let selectedCategory = viewModel.getObject(indexPath: indexPath)?.title else { return }
         
         // Передаем выбранную категорию делегату
         delegate?.didSelectCategory(selectedCategory)
@@ -208,16 +224,4 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
-extension CategoryViewController: TrackerCategoryStoreDelegate {
-    func didUpdate(category: TrackerCategoryUpdate) {
-        tableView.performBatchUpdates {
-            let insertedIndexPaths = category.insertedIndexes.map { IndexPath(item: $0, section: 0) }
-            let deletedIndexPaths = category.deletedIndexes.map { IndexPath(item: $0, section: 0) }
-            tableView.insertRows(at: insertedIndexPaths, with: .automatic)
-            tableView.deleteRows(at: deletedIndexPaths, with: .fade)
-        }
-        
-        // Обновляем видимость заглушки после изменений
-        updatePlaceholderVisibility()
-    }
-}
+
