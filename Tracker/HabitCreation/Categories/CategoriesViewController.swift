@@ -198,7 +198,14 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return viewModel.model?.numberOfRowsInSection(section) ?? 0
+        var rowsCount = 0
+            
+            // Устанавливаем замыкание перед вызовом updateTable
+            viewModel.numberOfRowsInSection = { count in
+                rowsCount = count
+            }
+            
+            return rowsCount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

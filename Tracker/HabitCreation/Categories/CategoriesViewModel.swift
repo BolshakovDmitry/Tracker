@@ -15,12 +15,13 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
 
     var model: TrackerCategoryStore?
     
-    var numberOfRowsInSection: Binding<Int>?
-
-    func updateTable() {
-        numberOfRowsInSection?(model?.numberOfRowsInSection(0) ?? 0)
+    // Замыкание для наблюдения за изменениями количества строк
+    var numberOfRowsInSection: Binding<Int>? {
+        didSet {
+            // При установке замыкания сразу отправляем текущее значение
+            numberOfRowsInSection?(model?.numberOfRowsInSection(0) ?? 0)
+        }
     }
-    
     func getObject(indexPath: IndexPath) -> TrackerCategory? {
         model?.object(at: indexPath)
     }
