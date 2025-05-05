@@ -93,6 +93,8 @@ final class CategoriesViewController: UIViewController {
     
     // MARK: - Lifecycle
     
+    private var rowsCount = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
                
@@ -101,6 +103,19 @@ final class CategoriesViewController: UIViewController {
         setupActions()
         updatePlaceholderVisibility()
         setupBindings()
+        
+        updateRows()
+//        viewModel.numberOfRowsInSection = { count in
+//            self.rowsCount = count
+//            self.tableView.reloadData()
+//        }
+        
+    }
+    
+    private func updateRows(){
+        viewModel.numberOfRowsInSection = { count in
+            self.rowsCount = count
+        }
     }
     
     // MARK: - Setup UI
@@ -157,23 +172,25 @@ final class CategoriesViewController: UIViewController {
     }
     
     private func setupBindings() {
+        
         // Подписываемся на обновления категорий
         viewModel.onCategoryUpdate = { [weak self] update in
             guard let self = self else { return }
             
-            print("Контроллер получил обновление таблицы")
-            
+            updateRows()
+              
             self.tableView.performBatchUpdates {
                 let insertedIndexPaths = update.insertedIndexes.map { IndexPath(item: $0, section: 0) }
-                let deletedIndexPaths = update.deletedIndexes.map { IndexPath(item: $0, section: 0) }
+                
+                print(insertedIndexPaths)
                 
                 self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
-                self.tableView.deleteRows(at: deletedIndexPaths, with: .fade)
             }
-            
+     
             // Обновляем видимость заглушки после изменений
             self.updatePlaceholderVisibility()
         }
+
     }
     
     // MARK: - Actions
@@ -197,14 +214,7 @@ final class CategoriesViewController: UIViewController {
 extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        var rowsCount = 0
-            
-            // Устанавливаем замыкание перед вызовом updateTable
-            viewModel.numberOfRowsInSection = { count in
-                rowsCount = count
-            }
-            
+
             return rowsCount
     }
     

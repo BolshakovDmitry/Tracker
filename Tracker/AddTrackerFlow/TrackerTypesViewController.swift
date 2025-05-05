@@ -97,9 +97,7 @@ final class TrackerTypesViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func habitButtonTapped() {
-        print("Выбрана привычка")
         
-
         let habitCreationVC = HabitCreationViewController()
         habitCreationVC.delegate = trackerViewControllerDelegate
         habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate

@@ -324,7 +324,7 @@ final class HabitCreationViewController: UIViewController {
     
     // Обработчик нажатия на ячейку категории
     private func showCategoryViewController() {
-        print("Переход к выбору категории")
+       
         let viewModel = CategoriesViewModel()
         let categoryVC = CategoriesViewController(viewModel: viewModel)
         let trackerCategoryStore = TrackerCategoryStore(delegate: viewModel)

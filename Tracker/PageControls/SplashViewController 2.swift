@@ -46,7 +46,7 @@ class SplashViewController2: UIViewController {
     }
     
        @objc private func buttonTapped() {
-        print("Кнопка нажата!")
+        
            let mainTabBarController = MainTabBarController()
            mainTabBarController.modalPresentationStyle = .fullScreen
            self.present(mainTabBarController, animated: true)

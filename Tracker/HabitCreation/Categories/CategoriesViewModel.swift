@@ -22,6 +22,7 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
             numberOfRowsInSection?(model?.numberOfRowsInSection(0) ?? 0)
         }
     }
+    
     func getObject(indexPath: IndexPath) -> TrackerCategory? {
         model?.object(at: indexPath)
     }
