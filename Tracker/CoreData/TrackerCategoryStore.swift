@@ -7,7 +7,7 @@ struct TrackerCategoryUpdate {
 }
 
 protocol TrackerCategoryStoreDelegate: AnyObject {
-    func didUpdate(category: TrackerCategoryUpdate)
+    func didUpdate(update: TrackerCategoryUpdate)
 }
 
 protocol TrackerCategoryStoreProtocol {
@@ -21,6 +21,7 @@ final class TrackerCategoryStore: NSObject {
     // MARK: - NSFetchedResultsController
     private var insertedIndexes: IndexSet?
     private var deletedIndexes: IndexSet?
+    internal var insertedIndexes2 = IndexSet()
     private var delegate: TrackerCategoryStoreDelegate?
     private let context: NSManagedObjectContext
     
@@ -59,6 +60,7 @@ final class TrackerCategoryStore: NSObject {
 }
 
 extension TrackerCategoryStore: TrackerCategoryStoreProtocol {
+    
     var numberOfSections: Int {
         fetchedResultsController.sections?.count ?? 0
     }
@@ -95,7 +97,7 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
            return
        }
        
-       delegate?.didUpdate(category: TrackerCategoryUpdate(
+       delegate?.didUpdate(update: TrackerCategoryUpdate(
            insertedIndexes: inserted,
            deletedIndexes: deleted
        ))
@@ -121,7 +123,7 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
     }
 }
 
-extension TrackerCategoryStore: CategoryViewControllerDelegate {
+extension TrackerCategoryStore: CategoriesViewControllerDelegate {
     func addCategory(with category: TrackerCategory) {
         print("Добавление категории: \(category)")
         
@@ -130,6 +132,7 @@ extension TrackerCategoryStore: CategoryViewControllerDelegate {
         
         do {
             try context.save()
+            
             print("Категория успешно сохранена")
         } catch {
             print("Ошибка при сохранении категории: \(error)")

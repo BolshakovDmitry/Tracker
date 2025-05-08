@@ -324,12 +324,13 @@ final class HabitCreationViewController: UIViewController {
     
     // Обработчик нажатия на ячейку категории
     private func showCategoryViewController() {
-        print("Переход к выбору категории")
-        let categoryVC = CategoryViewController()
-        let trackerCategoryStore = TrackerCategoryStore(delegate: categoryVC)
+       
+        let viewModel = CategoriesViewModel()
+        let categoryVC = CategoriesViewController(viewModel: viewModel)
+        let trackerCategoryStore = TrackerCategoryStore(delegate: viewModel)
         
+        viewModel.model = trackerCategoryStore
         categoryVC.delegate = self
-        categoryVC.delegateCoreData = trackerCategoryStore
         
         categoryVC.modalPresentationStyle = .pageSheet
         
@@ -338,7 +339,7 @@ final class HabitCreationViewController: UIViewController {
     
     // Обработчик нажатия на ячейку расписания
     private func showScheduleViewController() {
-        print("Переход к настройке расписания")
+       
         let scheduleVC = ScheduleViewController()
            scheduleVC.delegate = self
            
@@ -384,10 +385,10 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         
         // Настраиваем сепаратор
         if indexPath.row == (trackerType == .habit ? SettingsType.allCases.count - 1 : 0) {
-            print(indexPath.row, "in the Empty separator sec")
+            
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         } else {
-            print(indexPath.row, "in the separator sec")
+           
             let customSeparator = UIView(frame: CGRect(x: 16, y: cell.frame.height - 2, width: cell.frame.width - 32, height: 0.5))
             customSeparator.backgroundColor = UIColor(named: "YP Grey")
             cell.contentView.addSubview(customSeparator)
@@ -562,7 +563,7 @@ extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
 
 // MARK: - CategorySelectionDelegate
 
-extension HabitCreationViewController: CategorySelectionDelegate {
+extension HabitCreationViewController: CategoriesSelectionDelegate {
     func didSelectCategory(_ category: String) {
         selectedCategory = category
         // Обновляем отображение в таблице

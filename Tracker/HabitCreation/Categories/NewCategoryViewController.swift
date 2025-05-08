@@ -1,27 +1,12 @@
 import UIKit
 
-protocol NewCategoryDelegate: AnyObject {
-    func didCreateCategory(_ categoryName: String)
-}
-
-final class NewCategory: UIViewController {
+final class NewCategoryViewController: UIViewController {
     
     // MARK: - Properties
     
-    weak var delegate: NewCategoryDelegate?
+    var delegate: CategoriesViewModelProtocol?
     private let minCategoryNameLength = 4
     private let alertPresenter = AlertPresenter.shared
-    private let categoryStore: TrackerCategoryStore
-    
-    // Обновите инициализатор (или добавьте его, если его нет)
-    init(categoryStore: TrackerCategoryStore) {
-        self.categoryStore = categoryStore
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     // MARK: - UI Elements
     
@@ -124,13 +109,9 @@ final class NewCategory: UIViewController {
             return
         }
         
-        // Получаем существующие категории из CoreData
-        let existingCategories = categoryStore.fetchCategories()
+        guard let existingCategories = delegate?.isSameName(with: categoryName) else { return }
         
-        // Проверяем, существует ли категория с таким же названием
-        let categoryExists = existingCategories.contains { $0.title == categoryName }
-        
-        if categoryExists {
+        if existingCategories {
             alertPresenter.showAlert(with: "Ошибка", with: "Данная категория уже есть", show: self)
             return
         }
@@ -143,7 +124,7 @@ final class NewCategory: UIViewController {
 
 // MARK: - UITextFieldDelegate
 
-extension NewCategory: UITextFieldDelegate {
+extension NewCategoryViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         // Получаем новый текст после изменения
         let currentText = textField.text ?? ""
