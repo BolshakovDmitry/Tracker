@@ -1,7 +1,7 @@
 
 import UIKit
 
-class SplashViewController: UIViewController {
+final class OnboardingStepOneViewController: UIViewController {
     
     private let backgroundImageView: UIImageView = {
         let imageView = UIImageView()

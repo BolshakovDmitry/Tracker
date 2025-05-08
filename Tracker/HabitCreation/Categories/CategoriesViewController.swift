@@ -94,7 +94,8 @@ final class CategoriesViewController: UIViewController {
     // MARK: - Lifecycle
     
     private var rowsCount = 0
-    
+  
+
     override func viewDidLoad() {
         super.viewDidLoad()
                
@@ -104,18 +105,8 @@ final class CategoriesViewController: UIViewController {
         updatePlaceholderVisibility()
         setupBindings()
         
-        updateRows()
-//        viewModel.numberOfRowsInSection = { count in
-//            self.rowsCount = count
-//            self.tableView.reloadData()
-//        }
         
-    }
-    
-    private func updateRows(){
-        viewModel.numberOfRowsInSection = { count in
-            self.rowsCount = count
-        }
+
     }
     
     // MARK: - Setup UI
@@ -171,16 +162,30 @@ final class CategoriesViewController: UIViewController {
         addButton.addTarget(self, action: #selector(addCategoryButtonTapped), for: .touchUpInside)
     }
     
+    private func indexPaths(from indexes: IndexSet) -> [IndexPath] {
+        indexes.map { IndexPath(row: $0, section: 0) }
+    }
+    
     private func setupBindings() {
-        
+    
+        // Подписываемся на изменение количества строк
+            viewModel.rowsBinding = { [weak self] count in
+                guard let self else { return }
+                self.rowsCount = count
+                print("Количество строк обновлено: \(count)")
+            }
+                
         // Подписываемся на обновления категорий
         viewModel.onCategoryUpdate = { [weak self] update in
-            guard let self = self else { return }
+            guard let self else { return }
             
-            updateRows()
-              
-            self.tableView.performBatchUpdates {
-                let insertedIndexPaths = update.insertedIndexes.map { IndexPath(item: $0, section: 0) }
+            // Преобразуем IndexSet в массив для удобного вывода
+                let insertedArray = Array(update.insertedIndexes)
+                print("Контроллер получил обновление таблицы. Вставленные индексы: \(insertedArray), Количество строк: \(self.rowsCount)")
+
+          self.tableView.performBatchUpdates {
+                          
+              let insertedIndexPaths =  self.indexPaths(from: update.insertedIndexes)
                 
                 print(insertedIndexPaths)
                 
@@ -214,8 +219,8 @@ final class CategoriesViewController: UIViewController {
 extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-
-            return rowsCount
+        
+        return rowsCount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

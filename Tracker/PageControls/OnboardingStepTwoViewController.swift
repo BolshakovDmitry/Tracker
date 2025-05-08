@@ -1,7 +1,7 @@
 
 import UIKit
 
-class SplashViewController2: UIViewController {
+class OnboardingStepTwoViewController: UIViewController {
     
     private let backgroundImageView: UIImageView = {
         let imageView = UIImageView()
@@ -40,6 +40,7 @@ class SplashViewController2: UIViewController {
         
         // Добавляем и настраиваем фоновое изображение и текст
         setup()
+        setupConstraints()
         
         // Добавляем обработчик нажатия
             actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
@@ -58,28 +59,23 @@ class SplashViewController2: UIViewController {
         view.addSubview(textLabelCenter)
         view.addSubview(actionButton)
         
-        // Растягиваем изображение на весь экран
+    }
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
             backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-        
-        // Центрируем текст на экране
-        NSLayoutConstraint.activate([
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
             textLabelCenter.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             textLabelCenter.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            actionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            actionButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            actionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            actionButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
-        
-        // кнопка
-        NSLayoutConstraint.activate([
-                   actionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                   actionButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
-                   actionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                   actionButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
-               ])
-        
     }
     
 }

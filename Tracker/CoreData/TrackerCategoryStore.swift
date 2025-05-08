@@ -132,6 +132,7 @@ extension TrackerCategoryStore: CategoriesViewControllerDelegate {
         
         do {
             try context.save()
+            
             print("Категория успешно сохранена")
         } catch {
             print("Ошибка при сохранении категории: \(error)")

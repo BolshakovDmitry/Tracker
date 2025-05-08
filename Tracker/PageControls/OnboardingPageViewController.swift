@@ -1,6 +1,6 @@
 import UIKit
 
-class OnboardingPageViewController: UIPageViewController {
+final class OnboardingPageViewController: UIPageViewController {
     
     // Массив контроллеров страниц
     private var pages: [UIViewController] = []
@@ -20,11 +20,11 @@ class OnboardingPageViewController: UIPageViewController {
         super.viewDidLoad()
         
         // Создаем страницы
-        let firstPage = SplashViewController()
-        let secondPage = SplashViewController2()
+        let firstPage = OnboardingStepOneViewController()
+        let secondPage = OnboardingStepTwoViewController()
         
-        // Добавляем страницы в массив
-        pages = [firstPage, secondPage]
+        // создаем страницы
+        setupPages()
         
         // Настраиваем UIPageViewController
         dataSource = self
@@ -45,6 +45,12 @@ class OnboardingPageViewController: UIPageViewController {
         
         // Добавляем наблюдателя за изменениями страницы
         pageControl.addTarget(self, action: #selector(pageControlTapped(_:)), for: .valueChanged)
+    }
+    
+    private func setupPages() {
+        let firstPage = OnboardingStepOneViewController()
+        let secondPage = OnboardingStepTwoViewController()
+        pages = [firstPage, secondPage]
     }
     
     @objc private func pageControlTapped(_ sender: UIPageControl) {

@@ -1,25 +1,32 @@
 import UIKit
-
 typealias Binding<T> = (T) -> Void
 
 protocol CategoriesViewModelProtocol {
-    var numberOfRowsInSection: Binding<Int>? { get }
-    func getObject(indexPath: IndexPath) -> TrackerCategory?
+    var rowsBinding: Binding<Int>? { get set }
+    
     var onCategoryUpdate: Binding<TrackerCategoryUpdate>? { get set }
+    func getObject(indexPath: IndexPath) -> TrackerCategory?
     func hasCategories() -> Bool
     func isSameName(with name: String) -> Bool
     func didCreateCategory(_ categoryName: String)
+    var onRowsCountUpdate: Int { get }
 }
 
 final class CategoriesViewModel: CategoriesViewModelProtocol {
-
+ 
     var model: TrackerCategoryStore?
     
-    // Замыкание для наблюдения за изменениями количества строк
-    var numberOfRowsInSection: Binding<Int>? {
+    // Вычисляемое свойство, которое всегда возвращает актуальное значение
+    var onRowsCountUpdate: Int {
+        return model?.numberOfRowsInSection(0) ?? 0
+        
+    }
+    
+    // Замыкание для оповещения об изменениях количества строк
+    var rowsBinding: Binding<Int>? {
         didSet {
             // При установке замыкания сразу отправляем текущее значение
-            numberOfRowsInSection?(model?.numberOfRowsInSection(0) ?? 0)
+            rowsBinding?(onRowsCountUpdate)
         }
     }
     
@@ -30,12 +37,10 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
     var onCategoryUpdate: Binding<TrackerCategoryUpdate>?
     
     func hasCategories() -> Bool {
-        let count = model?.numberOfRowsInSection(0) ?? 0
-        return count > 0
+        return onRowsCountUpdate > 0
     }
     
     func isSameName(with name: String) -> Bool {
-        
         // Получаем существующие категории из CoreData
         let existingCategories = model?.fetchCategories() ?? []
         
@@ -47,7 +52,10 @@ extension CategoriesViewModel: TrackerCategoryStoreDelegate {
     func didUpdate(update: TrackerCategoryUpdate) {
         print("Обновления получены!")
         
-        // Передаем обновление в контроллер через замыкание
+        // Сначала обновляем количество строк через замыкание
+                rowsBinding?(onRowsCountUpdate)
+        
+                // Затем отправляем информацию о конкретных индексах для batch updates
                 onCategoryUpdate?(update)
     }
 }
@@ -55,7 +63,6 @@ extension CategoriesViewModel: TrackerCategoryStoreDelegate {
 extension CategoriesViewModel {
     func didCreateCategory(_ categoryName: String) {
         let newCategory = TrackerCategory(title: categoryName, trackers: [])
-
         model?.addCategory(with: newCategory)
     }
 }
