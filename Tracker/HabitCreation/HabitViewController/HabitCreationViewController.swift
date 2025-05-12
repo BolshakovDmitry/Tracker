@@ -6,6 +6,7 @@ protocol ScheduleSelectionDelegate: AnyObject {
 
 protocol HabitCreationViewControllerDelegate: AnyObject {
     func didCreateTracker(tracker: Tracker, category: String)
+    func updateTracker(tracker: Tracker, category: String) -> Bool
 }
 
 final class HabitCreationViewController: UIViewController {
@@ -27,17 +28,27 @@ final class HabitCreationViewController: UIViewController {
         }
     }
     
-    // MARK: - public fields
+    // MARK: - public methods and fields
+    
+    func setSchedule(selectedSchedule: [WeekDay]) {
+        self.selectedSchedule = selectedSchedule
+    }
+    
+    func setCategory(category: String){
+        self.selectedCategory = category
+    }
     
     var delegate: HabitCreationViewControllerDelegate?
     var delegateTrackerCoreData: HabitCreationViewControllerDelegate?
     var trackerType: TrackerType = .habit
+    var tracker: Tracker?
+    var categoryName: String?
     
     // MARK: - UI Elements
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая привычка"
+        //label.text = "Новая привычка"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -141,8 +152,12 @@ final class HabitCreationViewController: UIViewController {
         super.viewDidLoad()
         
         // Устанавливаем заголовок в зависимости от типа трекера
-        titleLabel.text = trackerType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
-        
+        if trackerType == .edit {
+            titleLabel.text = "Редактирование привычки"
+            nameTextField.text = tracker?.name
+        }  else {
+            titleLabel.text = trackerType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
+        }
         setupUI()
         setupTableView()
         setupCollectionView()
@@ -178,7 +193,7 @@ final class HabitCreationViewController: UIViewController {
             settingsTableView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
             settingsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             settingsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            settingsTableView.heightAnchor.constraint(equalToConstant: trackerType == .habit ? 150 : 75), // Высота для одной или двух ячеек
+            settingsTableView.heightAnchor.constraint(equalToConstant: (trackerType == .habit || trackerType == .edit) ? 150 : 75),
             
             // CollectionView
             collectionView.topAnchor.constraint(equalTo: settingsTableView.bottomAnchor, constant: 32),
@@ -242,6 +257,7 @@ final class HabitCreationViewController: UIViewController {
     private func updateCreateButtonState() {
         let isTextValid = (nameTextField.text?.count ?? 0) >= 4
         let isCategorySelected = selectedCategory != nil
+        
         let isScheduleSelected = trackerType == .irregularEvent || !selectedSchedule.isEmpty
         let isEmojiSelected = selectedEmojiIndex != nil
         let isColorSelected = selectedColorIndex != nil
@@ -271,24 +287,34 @@ final class HabitCreationViewController: UIViewController {
         
         let selectedEmoji = emojis[emojiIndex]
         let selectedColor = colors[colorIndex]
+        let trackerID = tracker?.id ?? UUID()
         
         // Для нерегулярного события устанавливаем пустое расписание
-        let schedule = trackerType == .habit ? selectedSchedule : WeekDay.allCases
+        let schedule = trackerType == .habit || trackerType == .edit ? selectedSchedule : WeekDay.allCases
         
-        // Создаем новую привычку с выбранным расписанием
-        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
+//        // Создаем новую привычку с выбранным расписанием
+//        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
         
-        delegateTrackerCoreData?.didCreateTracker(tracker: newTracker, category: selectedCategory ?? "No category")
-        
-        // Здесь будет логика сохранения новой привычки
-        print("Создан новый трекер: \(newTracker)")
-        
+        if trackerType == .edit {
+            let updatedTracker = Tracker(id: trackerID, name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule,
+                                         type: tracker?.type ?? .habit)
+            print("Updated Tracker -", updatedTracker)
+            _ = delegateTrackerCoreData?.updateTracker(tracker: updatedTracker, category: selectedCategory ?? "No category")
+        } else {
+            // Создаем новую привычку с выбранным расписанием
+                    let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
+            print("Создан новый трекер: \(newTracker)")
+            delegateTrackerCoreData?.didCreateTracker(tracker: newTracker, category: selectedCategory ?? "No category")
+        }
+    
         let previousVC = self.presentingViewController
         
         // Закрываем оба экрана
         dismiss(animated: true) {
-            // После закрытия HabitCreationViewController закрываем и TrackerTypesViewController
-            previousVC?.dismiss(animated: true)
+            if self.trackerType != .edit {
+                // После закрытия HabitCreationViewController закрываем и TrackerTypesViewController
+                previousVC?.dismiss(animated: true)
+            }
         }
     }
     
@@ -359,14 +385,19 @@ final class HabitCreationViewController: UIViewController {
 extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        trackerType == .habit ? SettingsType.allCases.count : 1
+        if trackerType == .edit {
+            return 2
+        } else {
+            return trackerType == .habit ? SettingsType.allCases.count : 1
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as? SettingsTableViewCell
         
         // Для нерегулярного события всегда показываем только категорию
-        let settingsTypeIndex = trackerType == .habit ? indexPath.row : SettingsType.category.rawValue
+        
+        let settingsTypeIndex = (trackerType == .habit || trackerType == .edit)  ? indexPath.row : SettingsType.category.rawValue
         
         guard let settingsType = SettingsType(rawValue: settingsTypeIndex), let cell = cell else {
             return UITableViewCell()
@@ -374,17 +405,26 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         
         var value: String?
         
-        switch settingsType {
-        case .category:
-            value = selectedCategory
-        case .schedule:
-            value = selectedSchedule.isEmpty ? nil : formattedSchedule(selectedSchedule)
+        if trackerType == .edit {
+            switch settingsType {
+            case .category:
+                value = selectedCategory
+            case .schedule:
+                value = selectedSchedule.isEmpty ? nil : formattedSchedule(selectedSchedule)
+            }
+        } else {
+            switch settingsType {
+            case .category:
+                value = selectedCategory
+            case .schedule:
+                value = selectedSchedule.isEmpty ? nil : formattedSchedule(selectedSchedule)
+            }
         }
         
         let isLast: Bool = false
         
         // Настраиваем сепаратор
-        if indexPath.row == (trackerType == .habit ? SettingsType.allCases.count - 1 : 0) {
+        if indexPath.row == (trackerType == .habit || trackerType == .edit ? SettingsType.allCases.count - 1 : 0) {
             
                 cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         } else {
@@ -396,6 +436,7 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         
         
         // Настраиваем ячейку через метод configure
+        
         cell.configure(with: settingsType.title, value: value, isLast: isLast)
         
         return cell
@@ -405,7 +446,7 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         tableView.deselectRow(at: indexPath, animated: true)
         
         // Для нерегулярного события всегда обрабатываем как категорию
-        let settingsTypeIndex = trackerType == .habit ? indexPath.row : SettingsType.category.rawValue
+        let settingsTypeIndex = trackerType == .habit || trackerType == .edit ? indexPath.row : SettingsType.category.rawValue
         
         guard let settingsType = SettingsType(rawValue: settingsTypeIndex) else {
             return

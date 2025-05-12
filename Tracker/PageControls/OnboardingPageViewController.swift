@@ -18,11 +18,7 @@ final class OnboardingPageViewController: UIPageViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Создаем страницы
-        let firstPage = OnboardingStepOneViewController()
-        let secondPage = OnboardingStepTwoViewController()
-        
+                
         // создаем страницы
         setupPages()
         

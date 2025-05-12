@@ -4,5 +4,6 @@ import UIKit
 enum TrackerType {
     case habit            // Привычка (регулярная)
     case irregularEvent   // Нерегулярное событие
+    case edit
 }
 
