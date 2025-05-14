@@ -4,12 +4,12 @@ protocol ScheduleSelectionDelegate: AnyObject {
     func didSelectSchedule(_ schedule: [WeekDay])
 }
 
-protocol HabitCreationViewControllerDelegate: AnyObject {
+protocol TrackerCreationViewControllerDelegate: AnyObject {
     func didCreateTracker(tracker: Tracker, category: String)
     func updateTracker(tracker: Tracker, category: String) -> Bool
 }
 
-final class HabitCreationViewController: UIViewController {
+final class TrackerCreationViewController: UIViewController {
     
     // MARK: - Types
     
@@ -38,11 +38,12 @@ final class HabitCreationViewController: UIViewController {
         self.selectedCategory = category
     }
     
-    var delegate: HabitCreationViewControllerDelegate?
-    var delegateTrackerCoreData: HabitCreationViewControllerDelegate?
+    var delegate: TrackerCreationViewControllerDelegate?
+    var delegateTrackerCoreData: TrackerCreationViewControllerDelegate?
     var trackerType: TrackerType = .habit
     var tracker: Tracker?
     var categoryName: String?
+    var completedDaysCount: Int = 0
     
     // MARK: - UI Elements
     
@@ -50,6 +51,14 @@ final class HabitCreationViewController: UIViewController {
         let label = UILabel()
         //label.text = "Новая привычка"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let labelEditMode: UILabel = {  // лейбл если страница в режиме редактирования
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -67,18 +76,18 @@ final class HabitCreationViewController: UIViewController {
     }()
     
     // Заменяем отдельные кнопки на TableView
-   
-        private let settingsTableView: UITableView = {
-            let tableView = UITableView(frame: .zero, style: .plain)
-            tableView.isScrollEnabled = false
-            tableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
-            tableView.separatorStyle = .none // Убираем стандартные разделители
-            tableView.layer.cornerRadius = 16
-            tableView.clipsToBounds = true
-            tableView.translatesAutoresizingMaskIntoConstraints = false
-            return tableView
-        }()
-
+    
+    private let settingsTableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.isScrollEnabled = false
+        tableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
+        tableView.separatorStyle = .none // Убираем стандартные разделители
+        tableView.layer.cornerRadius = 16
+        tableView.clipsToBounds = true
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
     
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -171,6 +180,15 @@ final class HabitCreationViewController: UIViewController {
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
+        
+        if trackerType == .edit {
+            view.addSubview(labelEditMode)
+            labelEditMode.text = "\(completedDaysCount)"
+            
+        }
+        
+        
+        
         view.addSubview(nameTextField)
         view.addSubview(settingsTableView)
         view.addSubview(collectionView)
@@ -178,13 +196,29 @@ final class HabitCreationViewController: UIViewController {
         view.addSubview(createButton)
         
         // Настраиваем констрейнты
+        
+        // Заголовок в верхней части экрана
         NSLayoutConstraint.activate([
-            // Заголовок в верхней части экрана
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
+        ])
+        
+        // Добавим констрейнты для меток количества дней только в режиме редактирования
+        if trackerType == .edit {
+            NSLayoutConstraint.activate([
+                labelEditMode.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
+                labelEditMode.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                
+                nameTextField.topAnchor.constraint(equalToSystemSpacingBelow: labelEditMode.bottomAnchor, multiplier: 8)
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                // Текстовое поле идет сразу после заголовка
+                nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
+            ])
+        }
+        NSLayoutConstraint.activate([
             // Текстовое поле
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
             nameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             nameTextField.heightAnchor.constraint(equalToConstant: 75),
@@ -273,6 +307,19 @@ final class HabitCreationViewController: UIViewController {
         updateCreateButtonState()
     }
     
+    // метод для форматирования строки с количеством дней
+    private func formatDaysString(with count: Int) -> String {
+        let remainder = count % 10
+        switch remainder {
+        case 1:
+            return "день"
+        case 2,3,4:
+            return "дня"
+        default:
+            return "дней"
+        }
+    }
+    
     // MARK: - Actions + Создание привычки
     
     @objc private func createButtonTapped() {
@@ -292,8 +339,8 @@ final class HabitCreationViewController: UIViewController {
         // Для нерегулярного события устанавливаем пустое расписание
         let schedule = trackerType == .habit || trackerType == .edit ? selectedSchedule : WeekDay.allCases
         
-//        // Создаем новую привычку с выбранным расписанием
-//        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
+        //        // Создаем новую привычку с выбранным расписанием
+        //        let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
         
         if trackerType == .edit {
             let updatedTracker = Tracker(id: trackerID, name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule,
@@ -302,11 +349,11 @@ final class HabitCreationViewController: UIViewController {
             _ = delegateTrackerCoreData?.updateTracker(tracker: updatedTracker, category: selectedCategory ?? "No category")
         } else {
             // Создаем новую привычку с выбранным расписанием
-                    let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
+            let newTracker = Tracker(name: text, color: selectedColor, emoji: selectedEmoji, schedule: schedule, type: trackerType)
             print("Создан новый трекер: \(newTracker)")
             delegateTrackerCoreData?.didCreateTracker(tracker: newTracker, category: selectedCategory ?? "No category")
         }
-    
+        
         let previousVC = self.presentingViewController
         
         // Закрываем оба экрана
@@ -350,7 +397,7 @@ final class HabitCreationViewController: UIViewController {
     
     // Обработчик нажатия на ячейку категории
     private func showCategoryViewController() {
-       
+        
         let viewModel = CategoriesViewModel()
         let categoryVC = CategoriesViewController(viewModel: viewModel)
         let trackerCategoryStore = TrackerCategoryStore(delegate: viewModel)
@@ -365,24 +412,24 @@ final class HabitCreationViewController: UIViewController {
     
     // Обработчик нажатия на ячейку расписания
     private func showScheduleViewController() {
-       
+        
         let scheduleVC = ScheduleViewController()
-           scheduleVC.delegate = self
-           
-           // Создаем navigation controller с scheduleVC в качестве корневого
-           let navController = UINavigationController(rootViewController: scheduleVC)
-           
-           // Настраиваем presentation style (можно использовать .pageSheet или .formSheet)
-           navController.modalPresentationStyle = .pageSheet
-           
-           // Презентуем navigation controller
-           present(navController, animated: true)
-       }
+        scheduleVC.delegate = self
+        
+        // Создаем navigation controller с scheduleVC в качестве корневого
+        let navController = UINavigationController(rootViewController: scheduleVC)
+        
+        // Настраиваем presentation style (можно использовать .pageSheet или .formSheet)
+        navController.modalPresentationStyle = .pageSheet
+        
+        // Презентуем navigation controller
+        present(navController, animated: true)
+    }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
 
-extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSource {
+extension TrackerCreationViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if trackerType == .edit {
@@ -426,9 +473,9 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         // Настраиваем сепаратор
         if indexPath.row == (trackerType == .habit || trackerType == .edit ? SettingsType.allCases.count - 1 : 0) {
             
-                cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         } else {
-           
+            
             let customSeparator = UIView(frame: CGRect(x: 16, y: cell.frame.height - 2, width: cell.frame.width - 32, height: 0.5))
             customSeparator.backgroundColor = UIColor(named: "YP Grey")
             cell.contentView.addSubview(customSeparator)
@@ -460,7 +507,7 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
         }
     }
     
-
+    
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75 // Высота каждой ячейки
@@ -477,7 +524,7 @@ extension HabitCreationViewController: UITableViewDelegate, UITableViewDataSourc
 
 // MARK: - UICollectionViewDelegate, UICollectionViewDataSource
 
-extension HabitCreationViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension TrackerCreationViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 2
@@ -560,7 +607,7 @@ extension HabitCreationViewController: UICollectionViewDelegate, UICollectionVie
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
+extension TrackerCreationViewController: UICollectionViewDelegateFlowLayout {
     
     // Константы для расчета размеров и отступов
     private struct LayoutConstants {
@@ -572,39 +619,39 @@ extension HabitCreationViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView,
-                       layout collectionViewLayout: UICollectionViewLayout,
-                       sizeForItemAt indexPath: IndexPath) -> CGSize {
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: LayoutConstants.itemSize, height: LayoutConstants.itemSize)
     }
     
     func collectionView(_ collectionView: UICollectionView,
-                       layout collectionViewLayout: UICollectionViewLayout,
-                       minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return LayoutConstants.interitemSpacing
     }
     
     func collectionView(_ collectionView: UICollectionView,
-                       layout collectionViewLayout: UICollectionViewLayout,
-                       minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return LayoutConstants.lineSpacing
     }
     
     func collectionView(_ collectionView: UICollectionView,
-                       layout collectionViewLayout: UICollectionViewLayout,
-                       insetForSectionAt section: Int) -> UIEdgeInsets {
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        insetForSectionAt section: Int) -> UIEdgeInsets {
         return LayoutConstants.sectionInsets
     }
     
     func collectionView(_ collectionView: UICollectionView,
-                       layout collectionViewLayout: UICollectionViewLayout,
-                       referenceSizeForHeaderInSection section: Int) -> CGSize {
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        referenceSizeForHeaderInSection section: Int) -> CGSize {
         return CGSize(width: collectionView.frame.width, height: LayoutConstants.headerHeight)
     }
 }
 
 // MARK: - CategorySelectionDelegate
 
-extension HabitCreationViewController: CategoriesSelectionDelegate {
+extension TrackerCreationViewController: CategoriesSelectionDelegate {
     func didSelectCategory(_ category: String) {
         selectedCategory = category
         // Обновляем отображение в таблице
@@ -613,7 +660,7 @@ extension HabitCreationViewController: CategoriesSelectionDelegate {
     }
 }
 
-extension HabitCreationViewController: ScheduleSelectionDelegate {
+extension TrackerCreationViewController: ScheduleSelectionDelegate {
     func didSelectSchedule(_ schedule: [WeekDay]) {
         // Сохраняем выбранное расписание
         selectedSchedule = schedule

@@ -14,7 +14,7 @@ final class TrackerTypesViewController: UIViewController {
     }
     // MARK: - Public fields
     
-    weak var trackerViewControllerDelegate: HabitCreationViewControllerDelegate?
+    weak var trackerViewControllerDelegate: TrackerCreationViewControllerDelegate?
     
     
     // MARK: - UI Elements
@@ -98,9 +98,9 @@ final class TrackerTypesViewController: UIViewController {
     
     @objc private func habitButtonTapped() {
         
-        let habitCreationVC = HabitCreationViewController()
+        let habitCreationVC = TrackerCreationViewController()
         habitCreationVC.delegate = trackerViewControllerDelegate
-        habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
+        habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any TrackerCreationViewControllerDelegate
         habitCreationVC.modalPresentationStyle = .pageSheet
         
         present(habitCreationVC, animated: true, completion: nil)
@@ -108,10 +108,10 @@ final class TrackerTypesViewController: UIViewController {
     
     @objc private func irregularEventButtonTapped() {
         print("Выбрано нерегулярное событие")
-        let irregularEventVC = HabitCreationViewController()
+        let irregularEventVC = TrackerCreationViewController()
         irregularEventVC.trackerType = .irregularEvent
         irregularEventVC.delegate = trackerViewControllerDelegate
-        irregularEventVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
+        irregularEventVC.delegateTrackerCoreData = delegateCoreData as? any TrackerCreationViewControllerDelegate
         irregularEventVC.modalPresentationStyle = .pageSheet
         present(irregularEventVC, animated: true, completion: nil)
     }

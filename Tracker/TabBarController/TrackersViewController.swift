@@ -4,9 +4,9 @@ protocol habitCreationVCDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to categoryTitle: String)
 }
 
-final class TrackersViewController: UIViewController, HabitCreationViewControllerDelegate {
+final class TrackersViewController: UIViewController, TrackerCreationViewControllerDelegate {
     func updateTracker(tracker: Tracker, category: String) -> Bool {
-    true
+        true
     }
     
     func didCreateTracker(tracker: Tracker, category: String) {
@@ -19,7 +19,7 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
     var delegateCellCoreData: TrackerRecordStoreProtocol?
     
     // Выполненные трекеры
-//    var completedTrackers: [TrackerRecord] = []
+    //    var completedTrackers: [TrackerRecord] = []
     
     // MARK: - UI Elements
     
@@ -106,6 +106,17 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
         return collectionView
     }()
     
+    private lazy var filterButton: UIButton = {
+        let filterButton =  UIButton()
+        filterButton.setTitle("Фильтры", for: .normal)
+        filterButton.setTitleColor(.white, for: .normal)
+        filterButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        filterButton.backgroundColor = .systemBlue
+        filterButton.layer.cornerRadius = 16
+        filterButton.translatesAutoresizingMaskIntoConstraints = false
+        return filterButton
+    }()
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -115,6 +126,7 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
         reloadTableWithActualDayTrackers()
         searchTextField.becomeFirstResponder()
         updatePlaceholderVisibility()
+        setupActions()
     }
     
     // MARK: - Setup UI
@@ -130,6 +142,7 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
         view.addSubview(trackersCollectionView)
         view.addSubview(searchTextField)
         view.addSubview(placeholderStackView)
+        view.addSubview(filterButton)
         
         // Настраиваем констрейнты
         NSLayoutConstraint.activate([
@@ -141,17 +154,38 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
             placeholderStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
-            // Задаем размеры для изображения
             placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
             placeholderImageView.heightAnchor.constraint(equalToConstant: 80),
             
             trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
             trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            
+            filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            filterButton.heightAnchor.constraint(equalToConstant: 50),
+            filterButton.widthAnchor.constraint(equalToConstant: 114)
         ])
-        
+    
+    }
+    
+    private func setupActions(){
         datePicker.addTarget(self, action: #selector(dateChanged(_:)), for: .valueChanged)
+        filterButton.addTarget(self, action: #selector(filterButtonPressed), for: .touchUpInside)
+    }
+    
+    @objc private func filterButtonPressed(){
+        
+        // Получаем сохраненное значение фильтра (строку)
+            let selectedFilterString = Storage.shared.chosenFilter ?? FilterType.today.rawValue
+            
+            // Находим индекс фильтра в перечислении по его строковому значению
+            let selectedFilterIndex = FilterType.allCases.firstIndex { $0.rawValue == selectedFilterString } ?? 1
+            
+        
+        let filtersVC = FiltersViewController(delegate: self.delegateCoreData, selectedFilterIndex: selectedFilterIndex)
+        self.present(filtersVC, animated: true)
     }
     
     private func reloadTableWithActualDayTrackers() {
@@ -209,7 +243,7 @@ final class TrackersViewController: UIViewController, HabitCreationViewControlle
             placeholderStackView.isHidden = false
         }
     }
-   
+    
 }
 
 // MARK: - UICollectionViewDataSource
@@ -238,18 +272,11 @@ extension TrackersViewController: UICollectionViewDataSource {
             let daysCompleted = delegateCellCoreData?.countCompletedDays(id: tracker.id) ?? 0
             
             cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
+            
         }
         
         return cell
     }
-    
-//    private func checkIsCompletedToday(id: UUID) -> Bool {
-//        
-//        completedTrackers.contains { trackerRecord in
-//            let isSameDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-//            return trackerRecord.id == id && isSameDay
-//        }
-//    }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         if kind == UICollectionView.elementKindSectionHeader {
@@ -343,60 +370,78 @@ extension TrackersViewController: TrackerRecordStoreDelegate & TrackerStoreDeleg
         trackersCollectionView.reloadData()
         updatePlaceholderVisibility()
     }
-   
+    
 }
 
 extension TrackersViewController {
+    
+    
+    
+    func previewForContextMenu(for cell: TrackerCollectionViewCell?) -> UIViewController {
+        // Simply delegate to the cell's existing method
+        return cell?.previewForContextMenu() ?? UIViewController()
+    }
+    
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         
         guard indexPaths.count > 0,
               let indexPath = indexPaths.first,
               let choosenTracker = delegateCoreData?.object(at: indexPath),
-              let categoryName = delegateCoreData?.getCategory(at: indexPath)
+              let categoryName = delegateCoreData?.getCategory(at: indexPath),
+              let daysDone = delegateCoreData?.getCompletedDaysCount(for: choosenTracker.id),
+              let cell = collectionView.cellForItem(at: indexPath) as? TrackerCollectionViewCell
         else {
             return nil }
         
+ 
         // Проверяем, закреплен ли трекер (находится ли он в категории "Закрепленные")
-            let isPinned = categoryName == "Закрепленные"
+        let isPinned = categoryName == "Закрепленные"
         
         print(choosenTracker.id)
         
-        return UIContextMenuConfiguration(actionProvider: { actions in
-                    return UIMenu(children: [
-                        UIAction(title: isPinned ? "Открепить" : "Закрепить") { _ in
-                            _ = self.delegateCoreData?.pinTracker(tracker: choosenTracker, isPinned: !isPinned)
-                        },
-                        UIAction(title: "Редактировать") { [weak self] _ in
-                            guard let self else { return }
-                            let habitCreationVC = HabitCreationViewController()
-                            let trackerStore = TrackerStore(delegate: self)
-                            habitCreationVC.trackerType = .edit
-                            habitCreationVC.delegateTrackerCoreData = trackerStore
-                            habitCreationVC.tracker = choosenTracker
-                            habitCreationVC.categoryName = categoryName
-                            habitCreationVC.setSchedule(selectedSchedule: choosenTracker.schedule)
-                            habitCreationVC.setCategory(category: categoryName)
-                            habitCreationVC.modalPresentationStyle = .pageSheet
-                            
-                            self.present(habitCreationVC, animated: true, completion: nil)
-                        },
-                        UIAction(title: "Удалить", attributes: .destructive) { _ in
-                            AlertPresenter.shared.showAlert(
-                                with: "Уверены что хотите удалить трекер?",
-                                with: "",
-                                show: self,
-                                preferredStyle: .actionSheet,
-                                with: [
-                                    UIAlertAction(title: "Удалить", style: .destructive) { _ in
-                                        _ = self.delegateCoreData?.deleteTracker(at: indexPath)
-                                        // Здесь можно также добавить обработку результата, если нужно
-                                    },
-                                    UIAlertAction(title: "Отменить", style: .cancel)
-                                ]
-                            )
-                        }
-                    ])
-                })
+        return UIContextMenuConfiguration(         identifier: indexPath as NSCopying,
+                                                   previewProvider: { [weak self, weak cell] in
+            return self?.previewForContextMenu(for: cell)
+        },
+                                                   
+                                          actionProvider: { actions in
+            return UIMenu(children: [
+                UIAction(title: isPinned ? "Открепить" : "Закрепить") { _ in
+                    _ = self.delegateCoreData?.pinTracker(tracker: choosenTracker, isPinned: !isPinned)
+                },
+                UIAction(title: "Редактировать") { [weak self] _ in
+                    guard let self else { return }
+                    let trackerCreationVC = TrackerCreationViewController()
+                    let trackerStore = TrackerStore(delegate: self)
+                    trackerCreationVC.trackerType = .edit
+                    trackerCreationVC.delegateTrackerCoreData = trackerStore
+                    trackerCreationVC.tracker = choosenTracker
+                    trackerCreationVC.categoryName = categoryName
+                    trackerCreationVC.setSchedule(selectedSchedule: choosenTracker.schedule)
+                    trackerCreationVC.setCategory(category: categoryName)
+                    trackerCreationVC.completedDaysCount = daysDone
+                    trackerCreationVC.modalPresentationStyle = .pageSheet
+                    
+                    
+                    self.present(trackerCreationVC, animated: true, completion: nil)
+                },
+                UIAction(title: "Удалить", attributes: .destructive) { _ in
+                    AlertPresenter.shared.showAlert(
+                        with: "Уверены что хотите удалить трекер?",
+                        with: "",
+                        show: self,
+                        preferredStyle: .actionSheet,
+                        with: [
+                            UIAlertAction(title: "Удалить", style: .destructive) { _ in
+                                _ = self.delegateCoreData?.deleteTracker(at: indexPath)
+                                // Здесь можно также добавить обработку результата, если нужно
+                            },
+                            UIAlertAction(title: "Отменить", style: .cancel)
+                        ]
+                    )
+                }
+            ])
+        })
         
     }
 }

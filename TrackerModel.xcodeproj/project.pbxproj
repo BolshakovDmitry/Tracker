@@ -40,14 +40,14 @@
 		F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				HabitCreation/Schedule/ScheduleViewController.swift,
+				TrackerCreation/Schedule/ScheduleViewController.swift,
 			);
 			target = F42483F52D95D162008E4D52 /* TrackerModelTests */;
 		};
 		F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				HabitCreation/Schedule/ScheduleViewController.swift,
+				TrackerCreation/Schedule/ScheduleViewController.swift,
 			);
 			target = F42483FF2D95D162008E4D52 /* TrackerModelUITests */;
 		};

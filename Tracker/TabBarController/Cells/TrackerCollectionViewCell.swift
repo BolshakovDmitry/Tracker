@@ -4,6 +4,7 @@ import UIKit
 protocol TrackerCellDelegate: AnyObject {
     func isDone(isComplete: Bool, id: UUID, with indexPath: IndexPath, type: TrackerType)
 }
+
 final class TrackerCollectionViewCell: UICollectionViewCell {
     
     private var trackeType: TrackerType?
@@ -116,6 +117,16 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         isCompletedToday.toggle()
         delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath, type: trackeType ?? .habit)
         
+    }
+    
+    func previewForContextMenu() -> UIViewController {
+        let previewController = UIViewController()
+        
+        // Создаем снимок существующего view для предварительного просмотра
+        previewController.view = containerView.snapshotView(afterScreenUpdates: true) ?? UIView()
+        previewController.preferredContentSize = containerView.bounds.size
+        
+        return previewController
     }
     
     func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int) {

@@ -22,7 +22,9 @@ protocol TrackerStoreProtocol {
     func sectionTitle(for section: Int) -> String?
     func filterCategories(by weekday: Int, searchText: String?)
     func filterVisibleCategories()
+    
     func loadAllCategories()
+    func getCompletedDaysCount(for trackerId: UUID) -> Int
 }
 
 class TrackerStore: NSObject {
@@ -72,7 +74,20 @@ class TrackerStore: NSObject {
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
         do {
             let categoriesCoreData = try context.fetch(fetchRequest)
-            categories = convertCDToCategories(categoriesCoreData)
+            var allCategories = convertCDToCategories(categoriesCoreData)
+            
+            // Сортируем категории, но выносим "Закрепленные" наверх
+            allCategories.sort { (category1, category2) -> Bool in
+                if category1.title == "Закрепленные" {
+                    return true // "Закрепленные" всегда в начале
+                } else if category2.title == "Закрепленные" {
+                    return false // Другая категория после "Закрепленные"
+                } else {
+                    return category1.title < category2.title // Обычная алфавитная сортировка
+                }
+            }
+            
+            categories = allCategories
         } catch {
             print("Ошибка при загрузке категорий: \(error)")
         }
@@ -237,9 +252,9 @@ class TrackerStore: NSObject {
     }
 }
 
-// MARK: - HabitCreationViewControllerDelegate
+// MARK: - TrackerCreationViewControllerDelegate
 
-extension TrackerStore: HabitCreationViewControllerDelegate {
+extension TrackerStore: TrackerCreationViewControllerDelegate {
     func didCreateTracker(tracker: Tracker, category: String) {
         
         // 1. Находим категорию по имени
@@ -377,6 +392,20 @@ extension TrackerStore: HabitCreationViewControllerDelegate {
 // MARK: - TrackerStoreProtocol
 
 extension TrackerStore: TrackerStoreProtocol {
+
+    func getCompletedDaysCount(for trackerId: UUID) -> Int {
+        let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
+        fetchRequest.predicate = NSPredicate(format: "id == %@", trackerId as CVarArg)
+        
+        do {
+            let records = try context.fetch(fetchRequest)
+            return records.count
+        } catch {
+            print("Ошибка при получении количества выполненных дней: \(error)")
+            return 0
+        }
+    }
+    
     
     // MARK: -  Pin/InPin
     
@@ -418,7 +447,6 @@ extension TrackerStore: TrackerStoreProtocol {
                 }
                 
                 // Запоминаем текущую категорию в дополнительном свойстве
-                // Для этого, возможно, понадобится добавить новое свойство в TrackerCoreData
                 // в модели CoreData
                 if trackerToUpdate.originalCategory == nil {
                     trackerToUpdate.originalCategory = trackerToUpdate.categoryLink?.title
