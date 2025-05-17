@@ -27,6 +27,16 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
+    private let pinIcon = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "pin.fill")
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
+    }()
+    
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
@@ -79,6 +89,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(containerView)
         containerView.addSubview(emojiLabel)
         containerView.addSubview(nameLabel)
+        containerView.addSubview(pinIcon)
         contentView.addSubview(completeButton)
         contentView.addSubview(dayCountLabel)
         
@@ -96,6 +107,11 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
             nameLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             nameLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             nameLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
+            
+            pinIcon.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 18),
+            pinIcon.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            pinIcon.widthAnchor.constraint(equalToConstant: 20),
+            pinIcon.heightAnchor.constraint(equalToConstant: 20),
             
             completeButton.topAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 8),
             completeButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
@@ -129,7 +145,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         return previewController
     }
     
-    func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int) {
+    func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int, isPinned: String) {
         self.trackeType = tracker.type
         self.indexPath = indexPath
         self.isCompletedToday = isCompletedToday
@@ -138,6 +154,10 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
+        
+        if isPinned == "Закрепленные" {            
+            pinIcon.isHidden = false
+        }
         
          if daysCompleted == 1 {
              dayCountLabel.text = "1 день"

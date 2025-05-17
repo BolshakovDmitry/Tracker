@@ -20,7 +20,7 @@ protocol TrackerStoreProtocol {
     func object(at: IndexPath) -> Tracker?
     func getCategory(at indexPath: IndexPath) -> String
     func sectionTitle(for section: Int) -> String?
-    func filterCategories(by weekday: Int, searchText: String?)
+    func filterCategories(by weekday: Int, searchText: String?, filterQuery: FilterType)
     func filterVisibleCategories()
     
     func loadAllCategories()
@@ -46,6 +46,7 @@ class TrackerStore: NSObject {
     // Текущий день недели для фильтрации
     private var currentWeekday: Int = Calendar.current.component(.weekday, from: Date())
     private var currentSearchText: String?
+    private var currentFilterQuery: FilterType?
     
     // MARK: - Initialization
     
@@ -126,9 +127,10 @@ class TrackerStore: NSObject {
     
     // MARK: - Filtering
     
-    func filterCategories(by weekday: Int, searchText: String? = nil) {
+    func filterCategories(by weekday: Int, searchText: String? = nil, filterQuery: FilterType) {
         currentWeekday = weekday
         currentSearchText = searchText
+        currentFilterQuery = filterQuery
         filterVisibleCategories()
         
         // Уведомляем делегат о необходимости обновить UI
@@ -137,40 +139,204 @@ class TrackerStore: NSObject {
     }
     
     func filterVisibleCategories() {
-        if currentSearchText == nil || currentSearchText?.isEmpty == true {
-            // Фильтрация с учетом нерегулярных событий
-            visibleCategories = categories.map { category in
-                TrackerCategory(
-                    title: category.title,
-                    trackers: category.trackers.filter { tracker in
-                        // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
-                        if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
-                            weekDay.numberValue == currentWeekday
-                        }) { return true }
-                        // Регулярные события фильтруем по дню недели
-                        return tracker.schedule.contains { weekDay in
-                            weekDay.numberValue == currentWeekday
+        if currentFilterQuery == .all {
+            if currentSearchText == nil || currentSearchText?.isEmpty == true {
+                // Фильтрация с учетом нерегулярных событий
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
+                            
+                            if category.title == "Закрепленные" { return true }
+                            
+                            if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }) { return true }
+                            
+                            
+                            // Регулярные события фильтруем по дню недели
+                            return tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
                         }
-                    }
-                )
-            }.filter { !$0.trackers.isEmpty }
-        } else {
-            // Фильтрация по дню недели, типу и тексту поиска
-            visibleCategories = categories.map { category in
-                TrackerCategory(
-                    title: category.title,
-                    trackers: category.trackers.filter { tracker in
-                        let matchesWeekday = tracker.type == .irregularEvent ||
-                        tracker.schedule.contains { weekDay in
-                            weekDay.numberValue == currentWeekday
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            } else {
+                // Фильтрация по дню недели, типу и тексту поиска
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            let matchesWeekday = tracker.type == .irregularEvent ||
+                            tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
+                            let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
+                            return matchesWeekday && matchesSearchText
                         }
-                        let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
-                        return matchesWeekday && matchesSearchText
-                    }
-                )
-            }.filter { !$0.trackers.isEmpty }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            }
         }
         
+        if currentFilterQuery == .today {
+            
+            let calendar = Calendar.current
+            let chosenDay = calendar.component(.weekday, from:  Date())
+            currentWeekday = chosenDay
+            
+            if currentSearchText == nil || currentSearchText?.isEmpty == true {
+                // Фильтрация с учетом нерегулярных событий
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
+                            
+                            if category.title == "Закрепленные" { return true }
+                            
+                            if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }) { return true }
+                            // Регулярные события фильтруем по дню недели
+                            return tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            } else {
+                // Фильтрация по дню недели, типу и тексту поиска
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            let matchesWeekday = tracker.type == .irregularEvent ||
+                            tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
+                            let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
+                            return matchesWeekday && matchesSearchText
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            }
+        }
+        if currentFilterQuery == .completed {
+            print("in the .completed")
+            if currentSearchText == nil || currentSearchText?.isEmpty == true {
+                // Фильтрация с учетом нерегулярных событий
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
+                            
+                            if category.title == "Закрепленные" { return true }
+                            
+                            if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }) { return true }
+                            
+                            let isDoneToday = isTrackerCompletedToday(id: tracker.id)
+                            // Регулярные события фильтруем по дню недели
+                            return tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            } && isDoneToday
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            } else {
+                // Фильтрация по дню недели, типу и тексту поиска
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            let matchesWeekday = tracker.type == .irregularEvent ||
+                            tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
+                            
+                            let isDoneToday = isTrackerCompletedToday(id: tracker.id)
+                            
+                            let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
+                            return matchesWeekday && matchesSearchText && isDoneToday
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            }
+        }
+        
+        if currentFilterQuery == .uncompleted {
+            print("in the .completed")
+            if currentSearchText == nil || currentSearchText?.isEmpty == true {
+                // Фильтрация с учетом нерегулярных событий
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
+                            
+                            if category.title == "Закрепленные" { return true }
+                            
+                            if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }) { return true }
+                            
+                            let isDoneToday = isTrackerCompletedToday(id: tracker.id)
+                            // Регулярные события фильтруем по дню недели
+                            return tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            } && !isDoneToday
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            } else {
+                // Фильтрация по дню недели, типу и тексту поиска
+                visibleCategories = categories.map { category in
+                    TrackerCategory(
+                        title: category.title,
+                        trackers: category.trackers.filter { tracker in
+                            let matchesWeekday = tracker.type == .irregularEvent ||
+                            tracker.schedule.contains { weekDay in
+                                weekDay.numberValue == currentWeekday
+                            }
+                            let matchesSearchText = tracker.name.lowercased().contains(currentSearchText!.lowercased())
+                            return matchesWeekday && matchesSearchText
+                        }
+                    )
+                }.filter { !$0.trackers.isEmpty }
+            }
+        }
+
+        
+    }
+    
+    func isTrackerCompletedToday(id: UUID) -> Bool {
+        let date = Date()
+        let calendar = Calendar.current
+        let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
+        
+        // Получаем все записи для данного трекера
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        
+        do {
+            let records = try context.fetch(fetchRequest)
+            
+            // Проверяем, есть ли запись с той же датой (только день)
+            for record in records {
+                if let recordDate = record.date {
+                    if calendar.isDate(recordDate, inSameDayAs: date) {
+                        return true
+                    }
+                }
+            }
+            return false
+        } catch {
+            print("Ошибка при проверке статуса трекера: \(error)")
+            return false
+        }
     }
     
     // MARK: - Fetched Results Controller

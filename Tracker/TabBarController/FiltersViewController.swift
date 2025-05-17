@@ -10,9 +10,10 @@ enum FilterType: String, CaseIterable {
 
 final class FiltersViewController: UIViewController {
     
-    init(delegate: TrackerStoreProtocol?, selectedFilterIndex: Int){
+    init(delegate: TrackerStoreProtocol?, selectedFilterIndex: Int, date: Int){
         self.delegate = delegate
         self.selectedFilterIndex = selectedFilterIndex
+        self.currentDate = date
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -22,7 +23,8 @@ final class FiltersViewController: UIViewController {
     
     private var delegate: TrackerStoreProtocol?
     private let storage = Storage.shared
-    private var selectedFilterIndex = 1
+    private var selectedFilterIndex = 0
+    private let currentDate: Int
     
     private lazy var titleLabel: UILabel = {
         let title = UILabel()
@@ -106,10 +108,14 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // Обновляем выбранный индекс
                selectedFilterIndex = indexPath.row
-               let selectedFilter = FilterType.allCases[indexPath.row]
+        let selectedFilter = FilterType.allCases[indexPath.row]
+        
                
                // Сохраняем выбранный фильтр
                storage.store(with: selectedFilter.rawValue)
+        
+        
+        delegate?.filterCategories(by: currentDate, searchText: nil, filterQuery: selectedFilter)
                
                // Обновляем отображение чекмарков
                tableView.reloadData()

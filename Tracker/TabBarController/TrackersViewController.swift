@@ -183,8 +183,10 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
             // Находим индекс фильтра в перечислении по его строковому значению
             let selectedFilterIndex = FilterType.allCases.firstIndex { $0.rawValue == selectedFilterString } ?? 1
             
+            let calendar = Calendar.current
+            let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        let filtersVC = FiltersViewController(delegate: self.delegateCoreData, selectedFilterIndex: selectedFilterIndex)
+        let filtersVC = FiltersViewController(delegate: self.delegateCoreData, selectedFilterIndex: selectedFilterIndex, date: chosenDay)
         self.present(filtersVC, animated: true)
     }
     
@@ -232,7 +234,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         let calendar = Calendar.current
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        delegateCoreData?.filterCategories(by: chosenDay, searchText: nil)
+        delegateCoreData?.filterCategories(by: chosenDay, searchText: nil, filterQuery: .all)
     }
     
     
@@ -262,7 +264,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         if let tracker = delegateCoreData?.object(at: indexPath) {
             
-            
+            let isPinned = delegateCoreData?.getCategory(at: indexPath) ?? "No category"
             // Проверяем, выполнен ли трекер сегодня
             let isCompleted = delegateCellCoreData?.isTrackerCompletedToday(id: tracker.id, date: datePicker.date) ?? false
             
@@ -271,7 +273,7 @@ extension TrackersViewController: UICollectionViewDataSource {
             // Подсчитываем количество выполненных дней
             let daysCompleted = delegateCellCoreData?.countCompletedDays(id: tracker.id) ?? 0
             
-            cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted)
+            cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted, isPinned: isPinned)
             
         }
         
@@ -327,7 +329,17 @@ extension TrackersViewController: UITextFieldDelegate {
         let calendar = Calendar.current
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
-        delegateCoreData?.filterCategories(by: chosenDay, searchText: textField.text)
+        
+        let storageFilterString = Storage.shared.chosenFilter ?? FilterType.all.rawValue
+                
+                // Находим соответствующий тип фильтра из сохраненного значения
+                let filterType = FilterType.allCases.first { filterType in
+                    filterType.rawValue == storageFilterString
+                } ?? .all // Значение по умолчанию, если не найдено
+        
+        print("!!!!!!!!!!!!!!", filterType)
+        
+        delegateCoreData?.filterCategories(by: chosenDay, searchText: textField.text, filterQuery: filterType)
         return true
     }
 }

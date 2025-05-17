@@ -61,6 +61,9 @@
 				F4B9599F2DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelTests" target */,
 				F4B959A02DA828C2008B8831 /* Exceptions for "Tracker" folder in "TrackerModelUITests" target */,
 			);
+			explicitFolders = (
+				ViewBackgroundColor,
+			);
 			path = Tracker;
 			sourceTree = "<group>";
 		};
