@@ -49,7 +49,10 @@ final class TrackerCreationViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        //label.text = "Новая привычка"
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -58,6 +61,10 @@ final class TrackerCreationViewController: UIViewController {
     
     private let labelEditMode: UILabel = {  // лейбл если страница в режиме редактирования
         let label = UILabel()
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -67,6 +74,10 @@ final class TrackerCreationViewController: UIViewController {
     private let nameTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Введите название трекера"
+        textField.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         textField.backgroundColor = UIColor(named: "CustomBackgroundDay")
         textField.layer.cornerRadius = 16
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
@@ -77,10 +88,13 @@ final class TrackerCreationViewController: UIViewController {
     
     // Заменяем отдельные кнопки на TableView
     
-    private let settingsTableView: UITableView = {
+    private let tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.isScrollEnabled = false
-        tableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
+        tableView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         tableView.separatorStyle = .none // Убираем стандартные разделители
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
@@ -93,7 +107,10 @@ final class TrackerCreationViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .systemBackground : .white
+        }
         collectionView.showsVerticalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
@@ -160,6 +177,8 @@ final class TrackerCreationViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .systemBackground
+        
         // Устанавливаем заголовок в зависимости от типа трекера
         if trackerType == .edit {
             titleLabel.text = "Редактирование привычки"
@@ -176,7 +195,7 @@ final class TrackerCreationViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
+        
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
@@ -190,7 +209,7 @@ final class TrackerCreationViewController: UIViewController {
         
         
         view.addSubview(nameTextField)
-        view.addSubview(settingsTableView)
+        view.addSubview(tableView)
         view.addSubview(collectionView)
         view.addSubview(cancelButton)
         view.addSubview(createButton)
@@ -224,13 +243,13 @@ final class TrackerCreationViewController: UIViewController {
             nameTextField.heightAnchor.constraint(equalToConstant: 75),
             
             // TableView для категории и расписания
-            settingsTableView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
-            settingsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            settingsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            settingsTableView.heightAnchor.constraint(equalToConstant: (trackerType == .habit || trackerType == .edit) ? 150 : 75),
+            tableView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            tableView.heightAnchor.constraint(equalToConstant: (trackerType == .habit || trackerType == .edit) ? 150 : 75),
             
             // CollectionView
-            collectionView.topAnchor.constraint(equalTo: settingsTableView.bottomAnchor, constant: 32),
+            collectionView.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 32),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             collectionView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
@@ -250,16 +269,15 @@ final class TrackerCreationViewController: UIViewController {
     }
     
     private func setupTableView() {
-        settingsTableView.delegate = self
-        settingsTableView.dataSource = self
+        tableView.delegate = self
+        tableView.dataSource = self
         
         // Регистрируем ячейку
-        settingsTableView.register(SettingsTableViewCell.self, forCellReuseIdentifier: "SettingsCell")
-        settingsTableView.backgroundColor = UIColor(named: "CustomBackgroundDay")
-        settingsTableView.separatorColor = UIColor(named: "CustomGrey")?.withAlphaComponent(0.3)
-        settingsTableView.layer.cornerRadius = 16 // Добавляем скругление углов
-        settingsTableView.clipsToBounds = true
-        settingsTableView.tableFooterView = UIView()
+        tableView.register(SettingsTableViewCell.self, forCellReuseIdentifier: "SettingsCell")
+        tableView.separatorColor = UIColor(named: "CustomGrey")?.withAlphaComponent(0.3)
+        tableView.layer.cornerRadius = 16 // Добавляем скругление углов
+        tableView.clipsToBounds = true
+        tableView.tableFooterView = UIView()
     }
     
     private func setupCollectionView() {
@@ -655,7 +673,7 @@ extension TrackerCreationViewController: CategoriesSelectionDelegate {
     func didSelectCategory(_ category: String) {
         selectedCategory = category
         // Обновляем отображение в таблице
-        settingsTableView.reloadRows(at: [IndexPath(row: SettingsType.category.rawValue, section: 0)], with: .none)
+        tableView.reloadRows(at: [IndexPath(row: SettingsType.category.rawValue, section: 0)], with: .none)
         updateCreateButtonState()
     }
 }
@@ -666,7 +684,7 @@ extension TrackerCreationViewController: ScheduleSelectionDelegate {
         selectedSchedule = schedule
         
         // Обновляем отображение в таблице
-        settingsTableView.reloadRows(at: [IndexPath(row: SettingsType.schedule.rawValue, section: 0)], with: .none)
+        tableView.reloadRows(at: [IndexPath(row: SettingsType.schedule.rawValue, section: 0)], with: .none)
         
         updateCreateButtonState()
     }

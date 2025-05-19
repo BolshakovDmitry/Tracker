@@ -34,13 +34,16 @@ final class CategoriesViewController: UIViewController {
         label.text = "Категория"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
+        // Используем системный цвет для автоматической адаптации
+        label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let tableView: UITableView = {
         let tableView = UITableView()
-        tableView.backgroundColor = .white
+        // Используем системный цвет фона вместо белого
+        tableView.backgroundColor = .systemBackground
         tableView.separatorStyle = .singleLine
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -53,7 +56,11 @@ final class CategoriesViewController: UIViewController {
         addButton.setTitle("Добавить категорию", for: .normal)
         addButton.setTitleColor(.white, for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        addButton.backgroundColor = .ypBlack
+        // Используем системный цвет или динамический цвет
+        addButton.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .systemBlue : .ypBlack // Используйте .systemBlue для темной темы или другой контрастный цвет
+        }
         addButton.layer.cornerRadius = 16
         addButton.translatesAutoresizingMaskIntoConstraints = false
         return addButton
@@ -85,7 +92,8 @@ final class CategoriesViewController: UIViewController {
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .black
+        // Используем системный цвет текста
+        label.textColor = .label
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -95,25 +103,32 @@ final class CategoriesViewController: UIViewController {
     
     private var rowsCount = 0
   
-
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Обновляем цвет фона на системный
+        view.backgroundColor = .systemBackground
                
         setupUI()
         setupTableView()
         setupActions()
         updatePlaceholderVisibility()
         setupBindings()
+    }
+    
+    // Добавляем метод для отслеживания изменения темы
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
         
-        
-
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            // Если нужно обновить какие-то элементы, специфичные для смены темы
+            tableView.reloadData() // Перезагружаем таблицу для обновления цветов
+        }
     }
     
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
-        
         // Настраиваем стек с заглушкой
         placeholderStackView.addArrangedSubview(placeholderImageView)
         placeholderStackView.addArrangedSubview(placeholderLabel)
@@ -167,35 +182,30 @@ final class CategoriesViewController: UIViewController {
     }
     
     private func setupBindings() {
-    
         // Подписываемся на изменение количества строк
-            viewModel.rowsBinding = { [weak self] count in
-                guard let self else { return }
-                self.rowsCount = count
-                print("Количество строк обновлено: \(count)")
-            }
+        viewModel.rowsBinding = { [weak self] count in
+            guard let self else { return }
+            self.rowsCount = count
+            print("Количество строк обновлено: \(count)")
+        }
                 
         // Подписываемся на обновления категорий
         viewModel.onCategoryUpdate = { [weak self] update in
             guard let self else { return }
             
             // Преобразуем IndexSet в массив для удобного вывода
-                let insertedArray = Array(update.insertedIndexes)
-                print("Контроллер получил обновление таблицы. Вставленные индексы: \(insertedArray), Количество строк: \(self.rowsCount)")
+            let insertedArray = Array(update.insertedIndexes)
+            print("Контроллер получил обновление таблицы. Вставленные индексы: \(insertedArray), Количество строк: \(self.rowsCount)")
 
-          self.tableView.performBatchUpdates {
-                          
-              let insertedIndexPaths =  self.indexPaths(from: update.insertedIndexes)
-                
+            self.tableView.performBatchUpdates {
+                let insertedIndexPaths = self.indexPaths(from: update.insertedIndexes)
                 print(insertedIndexPaths)
-                
                 self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
             }
      
             // Обновляем видимость заглушки после изменений
             self.updatePlaceholderVisibility()
         }
-
     }
     
     // MARK: - Actions
@@ -219,14 +229,25 @@ final class CategoriesViewController: UIViewController {
 extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
         return rowsCount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let record = viewModel.getObject(indexPath: indexPath) else { return UITableViewCell() }
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        
+        // Настройка цвета текста ячейки для поддержки темной темы
         cell.textLabel?.text = record.title
+        cell.textLabel?.textColor = .label
+        
+        // Настройка фона ячейки
+        cell.backgroundColor = .secondarySystemBackground
+        
+        // Настройка цвета выделения
+        let selectedBackgroundView = UIView()
+        selectedBackgroundView.backgroundColor = UIColor.systemGray5
+        cell.selectedBackgroundView = selectedBackgroundView
+        
         return cell
     }
     
@@ -243,7 +264,5 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
-    }
-}
-
-
+           }
+       }

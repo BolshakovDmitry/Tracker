@@ -60,7 +60,10 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         let label = UILabel()
         label.text = "4"
         label.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -126,6 +129,9 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
     }
     
     @objc private func completeButtonTapped() {
+        
+        AnalyticsService.shared.report(event: "click", screen: "Main", item: "track")
+        
         guard let trackerId = self.trackerId, let indexPath = self.indexPath else {
             assertionFailure("Failed to get cellID or indexPath for cell in CellClass ")
             return

@@ -25,10 +25,9 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     private let datePicker: UIDatePicker = {
         let picker = UIDatePicker()
+        picker.tintColor = .ypBlue
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
-        picker.tintColor = UIColor(named: "YP Blue")
-        
         return picker
     }()
     
@@ -93,7 +92,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         layout.minimumInteritemSpacing = 9
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = UIColor(named: "BackGroundColor")
         collectionView.showsVerticalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -113,6 +112,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         filterButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         filterButton.backgroundColor = .systemBlue
         filterButton.layer.cornerRadius = 16
+        filterButton.isHidden = false
         filterButton.translatesAutoresizingMaskIntoConstraints = false
         return filterButton
     }()
@@ -121,6 +121,10 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        view.backgroundColor = UIColor(named: "BackGroundColor")
+        
         setupUI()
         setupNavigationBar()
         reloadTableWithActualDayTrackers()
@@ -132,7 +136,6 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
         
         // Добавляем элементы в стек
         placeholderStackView.addArrangedSubview(placeholderImageView)
@@ -167,7 +170,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
             filterButton.heightAnchor.constraint(equalToConstant: 50),
             filterButton.widthAnchor.constraint(equalToConstant: 114)
         ])
-    
+        
     }
     
     private func setupActions(){
@@ -177,14 +180,16 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     @objc private func filterButtonPressed(){
         
+        AnalyticsService.shared.report(event: "click", screen: "Main", item: "filter")
+        
         // Получаем сохраненное значение фильтра (строку)
-            let selectedFilterString = Storage.shared.chosenFilter ?? FilterType.today.rawValue
-            
-            // Находим индекс фильтра в перечислении по его строковому значению
-            let selectedFilterIndex = FilterType.allCases.firstIndex { $0.rawValue == selectedFilterString } ?? 1
-            
-            let calendar = Calendar.current
-            let chosenDay = calendar.component(.weekday, from: datePicker.date)
+        let selectedFilterString = Storage.shared.chosenFilter ?? FilterType.today.rawValue
+        
+        // Находим индекс фильтра в перечислении по его строковому значению
+        let selectedFilterIndex = FilterType.allCases.firstIndex { $0.rawValue == selectedFilterString } ?? 1
+        
+        let calendar = Calendar.current
+        let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
         let filtersVC = FiltersViewController(delegate: self.delegateCoreData, selectedFilterIndex: selectedFilterIndex, date: chosenDay)
         self.present(filtersVC, animated: true)
@@ -206,7 +211,10 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
             target: self,
             action: #selector(addButtonTapped)
         )
-        addButton.tintColor = .ypBlack
+        addButton.tintColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         navigationItem.leftBarButtonItem = addButton
         
         // Добавляем DatePicker справа
@@ -217,6 +225,9 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     // MARK: - Actions
     
     @objc private func addButtonTapped() {
+        
+        AnalyticsService.shared.report(event: "click", screen: "Main", item: "add_track")
+        
         // Создаем новый экран выбора типа трекера
         let trackerTypesVC = TrackerTypesViewController(delegate: delegateCoreData)
         
@@ -241,8 +252,11 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     private func updatePlaceholderVisibility() {
         if let numberOfSections = delegateCoreData?.numberOfSections, numberOfSections > 0 {
             placeholderStackView.isHidden = true
+            filterButton.isHidden = false
+            
         } else {
             placeholderStackView.isHidden = false
+            filterButton.isHidden = true
         }
     }
     
@@ -331,11 +345,11 @@ extension TrackersViewController: UITextFieldDelegate {
         
         
         let storageFilterString = Storage.shared.chosenFilter ?? FilterType.all.rawValue
-                
-                // Находим соответствующий тип фильтра из сохраненного значения
-                let filterType = FilterType.allCases.first { filterType in
-                    filterType.rawValue == storageFilterString
-                } ?? .all // Значение по умолчанию, если не найдено
+        
+        // Находим соответствующий тип фильтра из сохраненного значения
+        let filterType = FilterType.allCases.first { filterType in
+            filterType.rawValue == storageFilterString
+        } ?? .all // Значение по умолчанию, если не найдено
         
         print("!!!!!!!!!!!!!!", filterType)
         
@@ -405,7 +419,7 @@ extension TrackersViewController {
         else {
             return nil }
         
- 
+        
         // Проверяем, закреплен ли трекер (находится ли он в категории "Закрепленные")
         let isPinned = categoryName == "Закрепленные"
         
@@ -416,7 +430,7 @@ extension TrackersViewController {
             return self?.previewForContextMenu(for: cell)
         },
                                                    
-                                          actionProvider: { actions in
+                                                   actionProvider: { actions in
             return UIMenu(children: [
                 UIAction(title: isPinned ? "Открепить" : "Закрепить") { _ in
                     _ = self.delegateCoreData?.pinTracker(tracker: choosenTracker, isPinned: !isPinned)
@@ -434,6 +448,7 @@ extension TrackersViewController {
                     trackerCreationVC.completedDaysCount = daysDone
                     trackerCreationVC.modalPresentationStyle = .pageSheet
                     
+                    AnalyticsService.shared.report(event: "click", screen: "Main", item: "edit")
                     
                     self.present(trackerCreationVC, animated: true, completion: nil)
                 },
@@ -451,6 +466,7 @@ extension TrackersViewController {
                             UIAlertAction(title: "Отменить", style: .cancel)
                         ]
                     )
+                    AnalyticsService.shared.report(event: "click", screen: "Main", item: "delete")
                 }
             ])
         })

@@ -14,6 +14,10 @@ final class NewCategoryViewController: UIViewController {
         let label = UILabel()
         label.text = "Новая категория"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -22,7 +26,10 @@ final class NewCategoryViewController: UIViewController {
     private lazy var categoryNameTextField: UITextField = {
         let textfield = UITextField()
         textfield.backgroundColor = UIColor(named: "CustomBackgroundDay")
-        textfield.textColor = .black
+        textfield.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         textfield.translatesAutoresizingMaskIntoConstraints = false
         textfield.layer.cornerRadius = 16
         textfield.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textfield.frame.height))
@@ -38,9 +45,15 @@ final class NewCategoryViewController: UIViewController {
     private let addButton: UIButton = {
         let addButton = UIButton()
         addButton.setTitle("Готово", for: .normal)
-        addButton.setTitleColor(.white, for: .normal)
+        addButton.setTitleColor(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+        }, for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        addButton.backgroundColor = .lightGray
+        addButton.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         addButton.layer.cornerRadius = 16
         addButton.translatesAutoresizingMaskIntoConstraints = false
         addButton.isEnabled = false
@@ -51,6 +64,8 @@ final class NewCategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        view.backgroundColor = .systemBackground
         
         setupUI()
         setupActions()
@@ -64,7 +79,6 @@ final class NewCategoryViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)

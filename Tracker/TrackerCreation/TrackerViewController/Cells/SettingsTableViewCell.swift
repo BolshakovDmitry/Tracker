@@ -18,7 +18,10 @@ final class SettingsTableViewCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -26,7 +29,10 @@ final class SettingsTableViewCell: UITableViewCell {
     private let valueLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .gray
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
         return label

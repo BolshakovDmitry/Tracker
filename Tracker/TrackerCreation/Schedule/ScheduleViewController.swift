@@ -9,7 +9,14 @@ final class ScheduleViewController: UIViewController {
     private let tableView: UITableView = {
         let tableView = UITableView()
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.backgroundColor = UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3)
+        
+        // Динамический цвет фона для темной темы
+        tableView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                UIColor(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0) : // Темно-серый для темной темы
+                UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3) // Светло-серый для светлой темы
+        }
+        
         tableView.layer.cornerRadius = 16
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -21,7 +28,19 @@ final class ScheduleViewController: UIViewController {
         button.setTitle("Готово", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        
+        // Динамический цвет фона для темной темы
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
+        
+        // Динамический цвет текста для темной темы
+        button.setTitleColor(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+        }, for: .normal)
+        
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -30,13 +49,52 @@ final class ScheduleViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.title = "Расписание"
+        
+        // Системный цвет фона для поддержки темной темы
+        view.backgroundColor = .systemBackground
+        
         setupUI()
         setupTableView()
         setupActions()
+        
+        // Настройка внешнего вида навигационной панели
+        setupNavigationBar()
+    }
+    
+    // Метод для отслеживания изменения темы
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            // Обновляем интерфейс при изменении темы
+            tableView.reloadData()
+            
+            // Обновляем цвет разделителей, если нужно
+            tableView.separatorColor = UIColor { traitCollection in
+                return traitCollection.userInterfaceStyle == .dark ?
+                    UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+            }
+        }
+    }
+    
+    private func setupNavigationBar() {
+        // Настройка цвета текста заголовка для темной темы
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = .systemBackground
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            navigationController?.navigationBar.standardAppearance = appearance
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+            navigationController?.navigationBar.tintColor = .label
+        } else {
+            navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.label]
+            navigationController?.navigationBar.tintColor = .label
+        }
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
         view.addSubview(tableView)
         view.addSubview(doneButton)
         
@@ -61,12 +119,15 @@ final class ScheduleViewController: UIViewController {
         tableView.register(DaySelectionCell.self, forCellReuseIdentifier: "DaySelectionCell")
         tableView.tableFooterView = UIView()
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(named: "CustomGrey")
+        
+        // Динамический цвет разделителя
+        tableView.separatorColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+        }
         
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: CGFloat.leastNonzeroMagnitude))
     }
-    
-    
     
     private func setupActions() {
         doneButton.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
@@ -87,9 +148,14 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "DaySelectionCell", for: indexPath) as? DaySelectionCell
         else { return UITableViewCell() }
+        
         let weekDay = WeekDay.allCases[indexPath.row]
         let isSelected = selectedDays.contains(weekDay)
-        cell.configure(with: weekDay.localizedName, isSelected: isSelected)
+        
+        // Передаем информацию о текущей теме
+        let isDarkTheme = traitCollection.userInterfaceStyle == .dark
+        cell.configure(with: weekDay.localizedName, isSelected: isSelected, isDarkTheme: isDarkTheme)
+        
         return cell
     }
     
@@ -111,12 +177,9 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        
         if indexPath.row == WeekDay.allCases.count - 1 {
-            
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         } else {
-            
             cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
     }

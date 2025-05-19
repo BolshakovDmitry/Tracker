@@ -4,7 +4,11 @@ final class TrackerHeaderView: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

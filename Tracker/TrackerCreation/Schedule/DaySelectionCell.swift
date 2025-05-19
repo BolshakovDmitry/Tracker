@@ -1,5 +1,4 @@
 import UIKit
-
 // Класс ячейки для выбора дня недели
 final class DaySelectionCell: UITableViewCell {
     
@@ -16,10 +15,9 @@ final class DaySelectionCell: UITableViewCell {
     // Переключатель для выбора дня
     private let switchControl: UISwitch = {
         let switchControl = UISwitch()
-        switchControl.onTintColor = .black
         switchControl.isUserInteractionEnabled = false // Отключаем взаимодействие с самим переключателем, так как выбор происходит нажатием на всю ячейку
         switchControl.translatesAutoresizingMaskIntoConstraints = false
-        switchControl.onTintColor = .ypBlue
+        switchControl.onTintColor = .systemBlue // Системный синий цвет, который адаптируется к теме
         return switchControl
     }()
     
@@ -59,9 +57,20 @@ final class DaySelectionCell: UITableViewCell {
     
     // MARK: - Configuration
     
-    // Метод для настройки ячейки
-    func configure(with dayName: String, isSelected: Bool) {
+    // Метод для настройки ячейки с поддержкой темной темы
+    func configure(with dayName: String, isSelected: Bool, isDarkTheme: Bool = false) {
         dayLabel.text = dayName
         switchControl.isOn = isSelected
+        
+        // Настройка цвета текста в зависимости от темы
+        dayLabel.textColor = isDarkTheme ? .white : .black
+        
+        // Настройка цвета переключателя в зависимости от темы
+        switchControl.onTintColor = isDarkTheme ? .systemBlue : .ypBlue
+        
+        // Настройка цвета фона ячейки (если нужно)
+        backgroundColor = isDarkTheme ?
+            UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1.0) : // Темно-серый для темной темы
+            .clear // Прозрачный для светлой темы
     }
 }

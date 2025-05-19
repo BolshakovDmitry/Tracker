@@ -24,16 +24,26 @@ final class TrackerTypesViewController: UIViewController {
         label.text = "Создание трекера"
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
+            label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let habitButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Привычка", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+                return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+            }, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -42,9 +52,15 @@ final class TrackerTypesViewController: UIViewController {
     private let irregularEventButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Нерегулярное событие", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+                return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+            }, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -55,6 +71,8 @@ final class TrackerTypesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .systemBackground
+        
         setupUI()
         setupActions()
     }
@@ -62,7 +80,6 @@ final class TrackerTypesViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)

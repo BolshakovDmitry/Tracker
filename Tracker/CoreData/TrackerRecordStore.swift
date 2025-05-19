@@ -10,6 +10,7 @@ protocol TrackerRecordStoreProtocol {
     func unDoneTapped(tracker: TrackerRecord, trackerType: TrackerType)
     func isTrackerCompletedToday(id: UUID, date: Date) -> Bool
     func countCompletedDays(id: UUID) -> Int
+    func getCompletedTrackersCount() -> Int
 }
 
 final class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
@@ -55,6 +56,21 @@ final class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol {
         
         return fetchedResultsController
     }()
+    
+    func getCompletedTrackersCount() -> Int {
+        let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
+        
+        do {
+            let records = try context.fetch(fetchRequest)
+            
+            // Получаем уникальные записи (уникальные трекеры)
+            let uniqueTrackerIDs = Set(records.map { $0.id })
+            return uniqueTrackerIDs.count
+        } catch {
+            print("Ошибка при получении количества завершенных трекеров: \(error)")
+            return 0
+        }
+    }
     
     // MARK: - TrackerRecordStoreProtocol
     

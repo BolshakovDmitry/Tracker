@@ -29,7 +29,10 @@ final class FiltersViewController: UIViewController {
     private lazy var titleLabel: UILabel = {
         let title = UILabel()
         title.text = "Фильтры"
-        title.textColor = .black
+        title.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         title.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         title.textAlignment = .center
         title.translatesAutoresizingMaskIntoConstraints = false
@@ -40,7 +43,10 @@ final class FiltersViewController: UIViewController {
         let tableView = UITableView()
         tableView.separatorStyle = .singleLine
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.backgroundColor = .systemGray6 // Светло-серый цвет как на скриншоте
+        tableView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        } // Светло-серый цвет как на скриншоте
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -65,7 +71,7 @@ final class FiltersViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         
         view.addSubview(titleLabel)
         view.addSubview(tableView)
@@ -92,8 +98,14 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
         let filterType = FilterType.allCases[indexPath.row]
         cell.textLabel?.text = filterType.rawValue
         cell.textLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        cell.backgroundColor = .customLightGrey
-        
+        cell.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+            UIColor.systemGray5 : .customLightGrey
+        }
+        cell.tintColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         if selectedFilterIndex == indexPath.row {
             cell.accessoryType = .checkmark
             cell.tintColor = .systemBlue

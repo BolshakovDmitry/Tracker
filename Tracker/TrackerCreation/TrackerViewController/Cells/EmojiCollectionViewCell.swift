@@ -6,18 +6,28 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 32)
         label.textAlignment = .center
+        // Установим прозрачный фон по умолчанию
+        label.backgroundColor = .clear
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let selectionBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(named: "CustomLightGrey")
+        // Динамический цвет для темной темы
+        view.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : 
+                UIColor(named: "CustomLightGrey") ?? UIColor.lightGray.withAlphaComponent(0.3) // Светло-серый для светлой темы
+        }
         view.layer.cornerRadius = 16
         view.isHidden = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+    
+    // Храним текущую тему для корректной обработки изменений
+    private var isDarkTheme: Bool = false
     
     override var isSelected: Bool {
         didSet {
@@ -35,10 +45,13 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        backgroundColor = .white
+        // Прозрачный фон ячейки для корректного отображения selectionBackgroundView
+        backgroundColor = .clear
         layer.cornerRadius = 8
     
+        // Сначала добавляем selectionBackgroundView как подвид основного представления
         addSubview(selectionBackgroundView)
+        // Затем добавляем emojiLabel как подвид contentView
         contentView.addSubview(emojiLabel)
     
         NSLayoutConstraint.activate([
@@ -51,14 +64,29 @@ final class EmojiCollectionViewCell: UICollectionViewCell {
             emojiLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
         
+        // Убедимся, что selectionBackgroundView находится за emojiLabel
         sendSubviewToBack(selectionBackgroundView)
     }
     
-    func configure(with emoji: String) {
+    // Обновленный метод configure для поддержки темной темы
+    func configure(with emoji: String, isDarkTheme: Bool = false) {
         emojiLabel.text = emoji
+        self.isDarkTheme = isDarkTheme
+        
+        // Обновляем фон и цвета в зависимости от текущей темы
+        updateSelectedState()
     }
     
+    // Метод для обновления состояния выделения
     private func updateSelectedState() {
+        // Показываем/скрываем фон выделения
         selectionBackgroundView.isHidden = !isSelected
+    }
+    
+    // Для обработки повторного использования ячеек
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        isSelected = false
+        selectionBackgroundView.isHidden = true
     }
 }
