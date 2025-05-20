@@ -20,7 +20,7 @@ final class StatisticsViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Статистика"
+        label.text = NSLocalizedString("statistic.button.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
         label.textAlignment = .left
         label.textColor = .label // Адаптивный цвет для темной темы

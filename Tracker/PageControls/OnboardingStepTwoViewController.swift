@@ -13,7 +13,7 @@ class OnboardingStepTwoViewController: UIViewController {
     
     private let textLabelCenter: UILabel = {
         let textLabelCenter = UILabel()
-        textLabelCenter.text = "Даже если это \nне литры воды и йога"
+        textLabelCenter.text = NSLocalizedString("onboarding.red.title", comment: "")
         textLabelCenter.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         textLabelCenter.textColor = .ypBlack
         textLabelCenter.numberOfLines = 2
@@ -24,7 +24,7 @@ class OnboardingStepTwoViewController: UIViewController {
     
     private let actionButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Вот это технологии!", for: .normal)
+        button.setTitle(NSLocalizedString("onboarding.button", comment: ""), for: .normal )
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .black

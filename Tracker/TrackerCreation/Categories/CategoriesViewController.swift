@@ -31,7 +31,7 @@ final class CategoriesViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Категория"
+        label.text =  NSLocalizedString("category.tableview.button", comment: "")
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         // Используем системный цвет для автоматической адаптации
@@ -53,7 +53,7 @@ final class CategoriesViewController: UIViewController {
     
     private let addButton: UIButton = {
         let addButton = UIButton()
-        addButton.setTitle("Добавить категорию", for: .normal)
+        addButton.setTitle(NSLocalizedString("add.category", comment: ""), for: .normal)
         addButton.setTitleColor(.white, for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         // Используем системный цвет или динамический цвет

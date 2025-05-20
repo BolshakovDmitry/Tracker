@@ -5,7 +5,7 @@ final class OnboardingStepOneViewController: UIViewController {
     
     private let backgroundImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "background") 
+        imageView.image = UIImage(named: "background")
         imageView.contentMode = .scaleAspectFill // Заполняет весь экран
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -13,7 +13,7 @@ final class OnboardingStepOneViewController: UIViewController {
     
     private let textLabelCenter: UILabel = {
         let textLabelCenter = UILabel()
-        textLabelCenter.text = "Отслеживайте только\nто, что хотите"
+        textLabelCenter.text = NSLocalizedString("onboarding.blue.title", comment: "")
         textLabelCenter.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         textLabelCenter.textColor = .ypBlack
         textLabelCenter.numberOfLines = 2
@@ -24,7 +24,7 @@ final class OnboardingStepOneViewController: UIViewController {
     
     private let actionButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Вот это технологии!", for: .normal)
+        button.setTitle(NSLocalizedString("onboarding.button", comment: ""), for: .normal )
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .black
@@ -42,14 +42,14 @@ final class OnboardingStepOneViewController: UIViewController {
         setup()
         
         // Добавляем обработчик нажатия
-            actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+        actionButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
     }
     
-       @objc private func buttonTapped() {
+    @objc private func buttonTapped() {
         
-           let mainTabBarController = MainTabBarController()
-           mainTabBarController.modalPresentationStyle = .fullScreen
-           self.present(mainTabBarController, animated: true)
+        let mainTabBarController = MainTabBarController()
+        mainTabBarController.modalPresentationStyle = .fullScreen
+        self.present(mainTabBarController, animated: true)
     }
     
     private func setup() {
@@ -74,11 +74,11 @@ final class OnboardingStepOneViewController: UIViewController {
         
         // кнопка
         NSLayoutConstraint.activate([
-                   actionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                   actionButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
-                   actionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                   actionButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
-               ])
+            actionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            actionButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            actionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            actionButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
         
     }
     

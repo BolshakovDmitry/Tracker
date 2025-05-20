@@ -21,7 +21,7 @@ final class TrackerTypesViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Создание трекера"
+        label.text = NSLocalizedString("trackers.creation.type.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.textColor = UIColor { traitCollection in
@@ -34,11 +34,8 @@ final class TrackerTypesViewController: UIViewController {
     
     private let habitButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Привычка", for: .normal)
-        button.setTitleColor(UIColor { traitCollection in
-                return traitCollection.userInterfaceStyle == .dark ?
-                .black : .white
-            }, for: .normal)
+        button.setTitle(NSLocalizedString("habit.button.title", comment: ""), for: .normal)
+        button.setTitleColor(UIColor(named: "BackGroundColor"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
@@ -51,7 +48,7 @@ final class TrackerTypesViewController: UIViewController {
     
     private let irregularEventButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Нерегулярное событие", for: .normal)
+        button.setTitle(NSLocalizedString("event.button.title", comment: ""), for: .normal)
         button.setTitleColor(UIColor { traitCollection in
                 return traitCollection.userInterfaceStyle == .dark ?
                 .black : .white

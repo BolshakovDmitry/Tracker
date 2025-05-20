@@ -17,10 +17,6 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     var delegateCoreData: TrackerStoreProtocol?
     var delegateCellCoreData: TrackerRecordStoreProtocol?
-    
-    // Выполненные трекеры
-    //    var completedTrackers: [TrackerRecord] = []
-    
     // MARK: - UI Elements
     
     private let datePicker: UIDatePicker = {
@@ -107,7 +103,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     private lazy var filterButton: UIButton = {
         let filterButton =  UIButton()
-        filterButton.setTitle("Фильтры", for: .normal)
+        filterButton.setTitle(NSLocalizedString("filters.button", comment: ""), for: .normal)
         filterButton.setTitleColor(.white, for: .normal)
         filterButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         filterButton.backgroundColor = .systemBlue
@@ -201,7 +197,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     private func setupNavigationBar() {
         // Настраиваем заголовок
-        title = "Трекеры"
+        title = NSLocalizedString("trackers.button.title", comment: "")
         navigationController?.navigationBar.prefersLargeTitles = true
         
         // Создаем кастомную кнопку с жирным плюсом

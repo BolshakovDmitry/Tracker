@@ -28,7 +28,7 @@ final class FiltersViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let title = UILabel()
-        title.text = "Фильтры"
+        title.text = NSLocalizedString("filters.navigation.title", comment: "")
         title.textColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
                 .white : .black

@@ -25,7 +25,7 @@ final class ScheduleViewController: UIViewController {
     
     private let doneButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("done.black.button", comment: ""), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         
@@ -48,7 +48,7 @@ final class ScheduleViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = "Расписание"
+        navigationItem.title =  NSLocalizedString("schedule.tableview.button", comment: "")
         
         // Системный цвет фона для поддержки темной темы
         view.backgroundColor = .systemBackground

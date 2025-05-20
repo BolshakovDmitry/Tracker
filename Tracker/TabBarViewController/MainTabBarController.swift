@@ -67,7 +67,7 @@ final class MainTabBarController: UITabBarController {
         
         let trackersNavController = UINavigationController(rootViewController: trackersVC)
         trackersNavController.tabBarItem = UITabBarItem(
-            title: "Трекеры",
+            title: NSLocalizedString("trackers.header", comment: ""),
             image: UIImage(systemName: "record.circle.fill"),
             tag: 0
         )
@@ -76,7 +76,7 @@ final class MainTabBarController: UITabBarController {
         let statisticsVC = StatisticsViewController()
         let statisticsNavController = UINavigationController(rootViewController: statisticsVC)
         statisticsNavController.tabBarItem = UITabBarItem(
-            title: "Статистика",
+            title: NSLocalizedString("statistic.button.title", comment: ""),
             image: UIImage(systemName: "hare.fill"),
             tag: 1
         )

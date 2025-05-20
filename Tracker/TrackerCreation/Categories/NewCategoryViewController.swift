@@ -12,7 +12,7 @@ final class NewCategoryViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая категория"
+        label.text = NSLocalizedString("new.category.button.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
@@ -36,7 +36,7 @@ final class NewCategoryViewController: UIViewController {
         textfield.leftViewMode = .always
         textfield.delegate = self
         textfield.isUserInteractionEnabled = true
-        textfield.placeholder = "Введите название новой категории"
+        textfield.placeholder = NSLocalizedString("new.category.name.placeholder", comment: "")
         textfield.clearButtonMode = .whileEditing
         textfield.returnKeyType = .done
         return textfield
@@ -44,7 +44,7 @@ final class NewCategoryViewController: UIViewController {
     
     private let addButton: UIButton = {
         let addButton = UIButton()
-        addButton.setTitle("Готово", for: .normal)
+        addButton.setTitle(NSLocalizedString("done.black.button", comment: ""), for: .normal)
         addButton.setTitleColor(UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
                 .black : .white

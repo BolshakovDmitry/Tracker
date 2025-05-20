@@ -21,9 +21,9 @@ final class TrackerCreationViewController: UIViewController {
         var title: String {
             switch self {
             case .category:
-                return "Категория"
+                return  NSLocalizedString("category.tableview.button", comment: "")
             case .schedule:
-                return "Расписание"
+                return NSLocalizedString("schedule.tableview.button", comment: "")
             }
         }
     }
@@ -73,7 +73,7 @@ final class TrackerCreationViewController: UIViewController {
     
     private let nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        textField.placeholder =  NSLocalizedString("event.name.placeholder", comment: "")
         textField.textColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
                 .white : .black
@@ -118,7 +118,7 @@ final class TrackerCreationViewController: UIViewController {
     
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(NSLocalizedString("cancel.alert.button", comment: ""), for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .white
         button.layer.cornerRadius = 16
@@ -130,7 +130,7 @@ final class TrackerCreationViewController: UIViewController {
     
     private let createButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(NSLocalizedString("create.creation.tracker.button", comment: ""), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .lightGray // Изначально серый
@@ -184,7 +184,7 @@ final class TrackerCreationViewController: UIViewController {
             titleLabel.text = "Редактирование привычки"
             nameTextField.text = tracker?.name
         }  else {
-            titleLabel.text = trackerType == .habit ? "Новая привычка" : "Новое нерегулярное событие"
+            titleLabel.text = trackerType == .habit ?  NSLocalizedString("new.habit.vc.title", comment: "") : NSLocalizedString("event.button.title", comment: "")
         }
         setupUI()
         setupTableView()
@@ -346,7 +346,7 @@ final class TrackerCreationViewController: UIViewController {
             let emojiIndex = selectedEmojiIndex?.item,
             let colorIndex = selectedColorIndex?.item
         else {
-            print("Необходимо заполнить все поля")
+            AlertPresenter.shared.showAlert(with: "Ошибка", with: "Необходимо заполнить все поля", show: self)
             return
         }
         
@@ -615,7 +615,7 @@ extension TrackerCreationViewController: UICollectionViewDelegate, UICollectionV
                 return UICollectionReusableView()
             }
             
-            let title = indexPath.section == 0 ? "Emoji" : "Цвет"
+            let title = indexPath.section == 0 ? "Emoji" : NSLocalizedString("color.collection.title", comment: "")
             headerView.configure(with: title)
             return headerView
         }
