@@ -120,7 +120,10 @@ final class TrackerCreationViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("cancel.alert.button", comment: ""), for: .normal)
         button.setTitleColor(.red, for: .normal)
-        button.backgroundColor = .white
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .systemBackground : .white
+        }
         button.layer.cornerRadius = 16
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.red.cgColor
@@ -131,7 +134,7 @@ final class TrackerCreationViewController: UIViewController {
     private let createButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("create.creation.tracker.button", comment: ""), for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor(named: "BackGroundColor"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .lightGray // Изначально серый
         button.layer.cornerRadius = 16
@@ -316,8 +319,14 @@ final class TrackerCreationViewController: UIViewController {
         
         let isFormValid = isTextValid && isCategorySelected && isScheduleSelected && isEmojiSelected && isColorSelected
         
+        let backgroundColorForButton = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         createButton.isEnabled = isFormValid
-        createButton.backgroundColor = isFormValid ? .black : .lightGray
+        //createButton.backgroundColor = isFormValid ? .black : .lightGray
+        createButton.backgroundColor = isFormValid ? backgroundColorForButton : .lightGray
+
     }
     
     // Обработчик изменения текста

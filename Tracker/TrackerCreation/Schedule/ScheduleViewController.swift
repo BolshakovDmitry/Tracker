@@ -13,8 +13,8 @@ final class ScheduleViewController: UIViewController {
         // Динамический цвет фона для темной темы
         tableView.backgroundColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
-                UIColor(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0) : // Темно-серый для темной темы
-                UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3) // Светло-серый для светлой темы
+            UIColor(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0) : // Темно-серый для темной темы
+            UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3) // Светло-серый для светлой темы
         }
         
         tableView.layer.cornerRadius = 16
@@ -72,7 +72,7 @@ final class ScheduleViewController: UIViewController {
             // Обновляем цвет разделителей, если нужно
             tableView.separatorColor = UIColor { traitCollection in
                 return traitCollection.userInterfaceStyle == .dark ?
-                    UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+                UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
             }
         }
     }
@@ -84,6 +84,11 @@ final class ScheduleViewController: UIViewController {
             appearance.configureWithDefaultBackground()
             appearance.backgroundColor = .systemBackground
             appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            // Удаляем тень/разделитель
+            appearance.shadowImage = nil
+            appearance.shadowColor = .clear
+            
             
             navigationController?.navigationBar.standardAppearance = appearance
             navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -123,7 +128,7 @@ final class ScheduleViewController: UIViewController {
         // Динамический цвет разделителя
         tableView.separatorColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
-                UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+            UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
         }
         
         tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: CGFloat.leastNonzeroMagnitude))

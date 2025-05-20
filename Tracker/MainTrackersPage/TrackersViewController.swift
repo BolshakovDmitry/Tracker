@@ -48,7 +48,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     private let placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Что будем отслеживать?"
+        label.text = NSLocalizedString("emptyState.trackers.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = .black
         label.textAlignment = .center
@@ -121,6 +121,8 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         
         view.backgroundColor = UIColor(named: "BackGroundColor")
         
+        updateFilterBackGroundColor()
+        
         setupUI()
         setupNavigationBar()
         reloadTableWithActualDayTrackers()
@@ -188,11 +190,30 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         let chosenDay = calendar.component(.weekday, from: datePicker.date)
         
         let filtersVC = FiltersViewController(delegate: self.delegateCoreData, selectedFilterIndex: selectedFilterIndex, date: chosenDay)
+        
+        // Устанавливаем замыкание
+        filtersVC.onFilterUpdated = { [weak self] in
+            self?.updateFilterBackGroundColor()
+        }
+        
         self.present(filtersVC, animated: true)
     }
     
     private func reloadTableWithActualDayTrackers() {
         dateChanged(datePicker)
+    }
+    
+    func updateFilterBackGroundColor() {
+        
+        guard let backGroundcolor = Storage.shared.chosenFilter else {
+            filterButton.backgroundColor = .blue
+            return }
+        
+        print(" ---------------------------------\(backGroundcolor)")
+        
+        if backGroundcolor != "Трекеры на сегодня" {
+            filterButton.backgroundColor = .red
+        } else { filterButton.backgroundColor = .blue }
     }
     
     private func setupNavigationBar() {
@@ -396,9 +417,7 @@ extension TrackersViewController: TrackerRecordStoreDelegate & TrackerStoreDeleg
 }
 
 extension TrackersViewController {
-    
-    
-    
+   
     func previewForContextMenu(for cell: TrackerCollectionViewCell?) -> UIViewController {
         // Simply delegate to the cell's existing method
         return cell?.previewForContextMenu() ?? UIViewController()
@@ -417,7 +436,7 @@ extension TrackersViewController {
         
         
         // Проверяем, закреплен ли трекер (находится ли он в категории "Закрепленные")
-        let isPinned = categoryName == "Закрепленные"
+        let isPinned = categoryName == NSLocalizedString("pinned", comment: "")
         
         print(choosenTracker.id)
         

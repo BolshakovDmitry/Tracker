@@ -59,7 +59,7 @@ final class StatisticsViewController: UIViewController {
     
     private let placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Анализировать пока нечего"
+        label.text = NSLocalizedString("emptyState.statistic.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = .label // Адаптивный цвет для темной темы
         label.textAlignment = .center
@@ -140,7 +140,7 @@ final class StatisticsViewController: UIViewController {
         // Создаем массив с элементами статистики
         statistics = [
             StatisticItem(title: String.localizedStringWithFormat(
-                NSLocalizedString("statistics", comment: "Pluralized form of trackers count")),
+                NSLocalizedString("statistics", comment: "")),
                           value: completedCount)
         ]
         // Обновляем таблицу

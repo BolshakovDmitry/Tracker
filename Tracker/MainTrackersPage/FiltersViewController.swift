@@ -34,6 +34,7 @@ final class FiltersViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var onFilterUpdated: (() -> Void)?
     private var delegate: TrackerStoreProtocol?
     private let storage = Storage.shared
     private var selectedFilterIndex = 0
@@ -141,6 +142,7 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
         
         
         delegate?.filterCategories(by: currentDate, searchText: nil, filterQuery: selectedFilter)
+        onFilterUpdated?()
                
                // Обновляем отображение чекмарков
                tableView.reloadData()

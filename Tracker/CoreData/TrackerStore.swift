@@ -79,9 +79,9 @@ class TrackerStore: NSObject {
             
             // Сортируем категории, но выносим "Закрепленные" наверх
             allCategories.sort { (category1, category2) -> Bool in
-                if category1.title == "Закрепленные" {
+                if category1.title == NSLocalizedString("pinned", comment: "") {
                     return true // "Закрепленные" всегда в начале
-                } else if category2.title == "Закрепленные" {
+                } else if category2.title == NSLocalizedString("pinned", comment: "") {
                     return false // Другая категория после "Закрепленные"
                 } else {
                     return category1.title < category2.title // Обычная алфавитная сортировка
@@ -148,7 +148,7 @@ class TrackerStore: NSObject {
                         trackers: category.trackers.filter { tracker in
                             // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
                             
-                            if category.title == "Закрепленные" { return true }
+                            if category.title == NSLocalizedString("pinned", comment: "") { return true }
                             
                             if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
                                 weekDay.numberValue == currentWeekday
@@ -194,7 +194,7 @@ class TrackerStore: NSObject {
                         trackers: category.trackers.filter { tracker in
                             // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
                             
-                            if category.title == "Закрепленные" { return true }
+                            if category.title == NSLocalizedString("pinned", comment: "") { return true }
                             
                             if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
                                 weekDay.numberValue == currentWeekday
@@ -233,7 +233,7 @@ class TrackerStore: NSObject {
                         trackers: category.trackers.filter { tracker in
                             // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
                             
-                            if category.title == "Закрепленные" { return true }
+                            if category.title == NSLocalizedString("pinned", comment: "") { return true }
                             
                             if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
                                 weekDay.numberValue == currentWeekday
@@ -278,7 +278,7 @@ class TrackerStore: NSObject {
                         trackers: category.trackers.filter { tracker in
                             // Нерегулярные события показываем только если день соответствует текущему ( при первом добавлении нерегулярного события - у него отмечены все дни,  соответственно до нажатия на кнопку выполнено у ячейки, трекер будет виден каждый день - после нажатия у него создается запись в trackerRecord  на выполненный день,  а все остальные дни удаляются
                             
-                            if category.title == "Закрепленные" { return true }
+                            if category.title == NSLocalizedString("pinned", comment: "") { return true }
                             
                             if tracker.type == .irregularEvent && tracker.schedule.contains(where: { weekDay in
                                 weekDay.numberValue == currentWeekday
@@ -558,7 +558,7 @@ extension TrackerStore: TrackerCreationViewControllerDelegate {
 // MARK: - TrackerStoreProtocol
 
 extension TrackerStore: TrackerStoreProtocol {
-
+ 
     func getCompletedDaysCount(for trackerId: UUID) -> Int {
         let fetchRequest = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
         fetchRequest.predicate = NSPredicate(format: "id == %@", trackerId as CVarArg)
@@ -577,7 +577,7 @@ extension TrackerStore: TrackerStoreProtocol {
     
     func pinTracker(tracker: Tracker, isPinned: Bool) -> Bool {
         // Название категории для закрепленных трекеров
-        let pinnedCategoryName = "Закрепленные"
+        let pinnedCategoryName = NSLocalizedString("pinned", comment: "")
         
         // 1. Находим трекер по ID
         let trackerFetchRequest = NSFetchRequest<TrackerCoreData>(entityName: "TrackerCoreData")

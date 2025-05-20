@@ -161,7 +161,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
         
-        if isPinned == "Закрепленные" {            
+        if isPinned == NSLocalizedString("pinned", comment: "") {
             pinIcon.isHidden = false
         }
         

@@ -87,7 +87,7 @@ final class CategoriesViewController: UIViewController {
 
     private let placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно\nобъединить по смыслу"
+        label.text = NSLocalizedString("category.view.placeholder", comment: "")
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
