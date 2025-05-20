@@ -368,7 +368,7 @@ extension TrackersViewController: TrackerCellDelegate {
         
         if comparison == .orderedDescending {
             
-            AlertPresenter.shared.showAlert(with: "Ошибка", with: "Нельзя отмечать привычки для будущих дат", show: self)
+            AlertPresenter.shared.showAlert(with: NSLocalizedString("error", comment: ""), with: NSLocalizedString("cannot.mark.future.trackers", comment: ""), show: self)
             // Если дата в будущем, показываем предупреждение и отменяем действие
             
             return
@@ -428,10 +428,10 @@ extension TrackersViewController {
                                                    
                                                    actionProvider: { actions in
             return UIMenu(children: [
-                UIAction(title: isPinned ? "Открепить" : "Закрепить") { _ in
+                UIAction(title: isPinned ? NSLocalizedString("unpin.tracker.button", comment: "") : NSLocalizedString("pin.tracker.button", comment: "")) { _ in
                     _ = self.delegateCoreData?.pinTracker(tracker: choosenTracker, isPinned: !isPinned)
                 },
-                UIAction(title: "Редактировать") { [weak self] _ in
+                UIAction(title: NSLocalizedString("edit.button", comment: "")) { [weak self] _ in
                     guard let self else { return }
                     let trackerCreationVC = TrackerCreationViewController()
                     let trackerStore = TrackerStore(delegate: self)
@@ -448,18 +448,18 @@ extension TrackersViewController {
                     
                     self.present(trackerCreationVC, animated: true, completion: nil)
                 },
-                UIAction(title: "Удалить", attributes: .destructive) { _ in
+                UIAction(title: NSLocalizedString("delete.button", comment: ""), attributes: .destructive) { _ in
                     AlertPresenter.shared.showAlert(
-                        with: "Уверены что хотите удалить трекер?",
+                        with: NSLocalizedString("delete.tracker.alert", comment: ""),
                         with: "",
                         show: self,
                         preferredStyle: .actionSheet,
                         with: [
-                            UIAlertAction(title: "Удалить", style: .destructive) { _ in
+                            UIAlertAction(title: NSLocalizedString("delete.button", comment: ""), style: .destructive) { _ in
                                 _ = self.delegateCoreData?.deleteTracker(at: indexPath)
                                 // Здесь можно также добавить обработку результата, если нужно
                             },
-                            UIAlertAction(title: "Отменить", style: .cancel)
+                            UIAlertAction(title: NSLocalizedString("cancel.alert.button", comment: ""), style: .cancel)
                         ]
                     )
                     AnalyticsService.shared.report(event: "click", screen: "Main", item: "delete")

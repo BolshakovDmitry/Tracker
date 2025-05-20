@@ -346,7 +346,7 @@ final class TrackerCreationViewController: UIViewController {
             let emojiIndex = selectedEmojiIndex?.item,
             let colorIndex = selectedColorIndex?.item
         else {
-            AlertPresenter.shared.showAlert(with: "Ошибка", with: "Необходимо заполнить все поля", show: self)
+            AlertPresenter.shared.showAlert(with: NSLocalizedString("error", comment: ""), with: NSLocalizedString("must.have.all.fiedls", comment: ""), show: self)
             return
         }
         
@@ -399,13 +399,13 @@ final class TrackerCreationViewController: UIViewController {
     // Метод для получения сокращенных названий дней недели
     private func shortName(for weekDay: WeekDay) -> String {
         switch weekDay {
-        case .monday: return "Пн"
-        case .tuesday: return "Вт"
-        case .wednesday: return "Ср"
-        case .thursday: return "Чт"
-        case .friday: return "Пт"
-        case .saturday: return "Сб"
-        case .sunday: return "Вс"
+        case .monday: return NSLocalizedString("weekday.monday.short", comment: "")
+        case .tuesday: return NSLocalizedString("weekday.tuesday.short", comment: "")
+        case .wednesday: return NSLocalizedString("weekday.wednesday.short", comment: "")
+        case .thursday: return NSLocalizedString("weekday.thursday.short", comment: "")
+        case .friday: return NSLocalizedString("weekday.friday.short", comment: "")
+        case .saturday: return NSLocalizedString("weekday.saturday.short", comment: "")
+        case .sunday: return NSLocalizedString("weekday.sunday.short", comment: "")
         }
     }
     

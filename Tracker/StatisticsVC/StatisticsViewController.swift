@@ -139,13 +139,10 @@ final class StatisticsViewController: UIViewController {
         
         // Создаем массив с элементами статистики
         statistics = [
-            StatisticItem(title: "Трекеров завершено", value: completedCount)
-            // Здесь можно добавить дополнительную статистику
-            // StatisticItem(title: "Трекеров пропущено", value: 0),
-            // StatisticItem(title: "Идеальные дни", value: 0),
-            // StatisticItem(title: "Среднее значение", value: 0)
+            StatisticItem(title: String.localizedStringWithFormat(
+                NSLocalizedString("statistics", comment: "Pluralized form of trackers count")),
+                          value: completedCount)
         ]
-        
         // Обновляем таблицу
         tableView.reloadData()
         

@@ -34,7 +34,7 @@
 "reduction.view.title" = "Редактирование привычки";
 "add.category" = "Добавить категорию";
 "category.view.placeholder" = "Привычки и события можно \n объединить по смыслу";
-"customize.button" = "Редактировать";
+"edit.button" = "Редактировать";
 "delete.button" = "Удалить";
 "category.delete.alert" = "Эта категория точно не нужна?";
 "reduction.category.view.title" = "Редактирование категории";
@@ -48,6 +48,9 @@
 "ideal.days" = "Идеальные дни";
 "best.period" = "Лучший период";
 "completed.trackers" = "Трекеров завершено";
+"error" = "Ошибка";
+"must.have.all.fiedls" = "Необходимо заполнить все поля";
+"cannot.mark.future.trackers" = "Нельзя отмечать привычки для будущих дат";
 
 "weekday.monday.full" = "Понедельник";
 "weekday.tuesday.full" = "Вторник";

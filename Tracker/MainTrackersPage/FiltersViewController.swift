@@ -5,6 +5,19 @@ enum FilterType: String, CaseIterable {
     case today = "Трекеры на сегодня"
     case completed = "Завершенные"
     case uncompleted = "Не завершенные"
+    
+    var localizedName: String {
+        switch self {
+        case .all:
+            return NSLocalizedString("filters.alltrackers.case", comment: "Monday full name")
+        case .today:
+            return NSLocalizedString("filters.today.case", comment: "Tuesday full name")
+        case .completed:
+            return NSLocalizedString("filters.completed.case", comment: "Wednesday full name")
+        case .uncompleted:
+            return NSLocalizedString("filters.notcompleted.case", comment: "Thursday full name")
+        }
+    }
 }
 
 
@@ -83,7 +96,7 @@ final class FiltersViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 30),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            tableView.heightAnchor.constraint(equalToConstant: 300) // Примерная высота для 4 ячеек с отступами
+            tableView.heightAnchor.constraint(equalToConstant: 300) //  высота для 4 ячеек с отступами
         ])
     }
 }
@@ -95,8 +108,8 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let filterType = FilterType.allCases[indexPath.row]
-        cell.textLabel?.text = filterType.rawValue
+        let filterType = FilterType.allCases[indexPath.row].localizedName
+        cell.textLabel?.text = filterType
         cell.textLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         cell.backgroundColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?

@@ -165,16 +165,17 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
             pinIcon.isHidden = false
         }
         
-         if daysCompleted == 1 {
-             dayCountLabel.text = "1 день"
-         } else if daysCompleted >= 2 && daysCompleted <= 4 {
-             dayCountLabel.text = "\(daysCompleted) дня"
-         } else {
-             dayCountLabel.text = "\(daysCompleted) дней"
-         }
+        dayCountLabel.text = String.localizedStringWithFormat(
+            NSLocalizedString("number.of.days", comment: "Pluralized form of days count"),
+            daysCompleted
+        )
         
         let _: Void = isCompletedToday ? completeButton.setImage(UIImage(systemName: "checkmark"), for: .normal) : completeButton.setImage(UIImage(systemName: "plus"), for: .normal)
         
+    }
+    
+    override func prepareForReuse() {
+        pinIcon.isHidden = true
     }
 }
 

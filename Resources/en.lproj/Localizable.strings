@@ -34,7 +34,7 @@
 "reduction.view.title" = "Habit editing";
 "add.category" = "Add category";
 "category.view.placeholder" = "Habits and events can be \n grouped by meaning";
-"customize.button" = "Edit";
+"edit.button" = "Edit";
 "delete.button" = "Delete";
 "category.delete.alert" = "Are you sure you don't need this category?";
 "reduction.category.view.title" = "Category editing";
@@ -48,6 +48,9 @@
 "ideal.days" = "Perfect days";
 "best.period" = "Best period";
 "completed.trackers" = "Completed trackers";
+"error" = "Error";
+"must.have.all.fiedls" = "Please fill all the required fields";
+"cannot.mark.future.trackers" = "Cannot mark upcoming trackers";
 
 "weekday.monday.full" = "Monday";
 "weekday.tuesday.full" = "Tuesday";
