@@ -3,7 +3,6 @@ typealias Binding<T> = (T) -> Void
 
 protocol CategoriesViewModelProtocol {
     var rowsBinding: Binding<Int>? { get set }
-    
     var onCategoryUpdate: Binding<TrackerCategoryUpdate>? { get set }
     func getObject(indexPath: IndexPath) -> TrackerCategory?
     func hasCategories() -> Bool
@@ -16,10 +15,30 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
  
     var model: TrackerCategoryStore?
     
-    // Вычисляемое свойство, которое всегда возвращает актуальное значение
-    var onRowsCountUpdate: Int {
-        return model?.numberOfRowsInSection(0) ?? 0
+    // Массив для хранения видимых категорий (исключая "Закрепленные")
+    private var visibleCategories: [TrackerCategory] = []
+    
+    // Константа для имени закрепленной категории
+    private let pinnedCategoryName = "Закрепленные"
+    
+    init() {
+        let trackerCategoryStore = TrackerCategoryStore(delegate: self)
+        self.model = trackerCategoryStore
+        updateVisibleCategories()
+    }
+    
+    // Метод для обновления массива видимых категорий
+    private func updateVisibleCategories() {
+        let allCategories = model?.fetchCategories() ?? []
+        visibleCategories = allCategories.filter { $0.title != pinnedCategoryName }
         
+        // Оповещаем о изменении количества строк
+        rowsBinding?(onRowsCountUpdate)
+    }
+    
+    // Вычисляемое свойство для количества строк (теперь основано на visibleCategories)
+    var onRowsCountUpdate: Int {
+        return visibleCategories.count
     }
     
     // Замыкание для оповещения об изменениях количества строк
@@ -30,8 +49,10 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
         }
     }
     
+    // Метод для получения объекта по индексу (теперь из visibleCategories)
     func getObject(indexPath: IndexPath) -> TrackerCategory? {
-        model?.object(at: indexPath)
+        guard indexPath.row < visibleCategories.count else { return nil }
+        return visibleCategories[indexPath.row]
     }
     
     var onCategoryUpdate: Binding<TrackerCategoryUpdate>?
@@ -41,9 +62,8 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
     }
     
     func isSameName(with name: String) -> Bool {
-        // Получаем существующие категории из CoreData
+        // Проверяем, есть ли категория с таким именем среди всех категорий
         let existingCategories = model?.fetchCategories() ?? []
-        
         return existingCategories.contains { $0.title == name }
     }
 }
@@ -52,11 +72,15 @@ extension CategoriesViewModel: TrackerCategoryStoreDelegate {
     func didUpdate(update: TrackerCategoryUpdate) {
         print("Обновления получены!")
         
-        // Сначала обновляем количество строк через замыкание
-                rowsBinding?(onRowsCountUpdate)
+        // Обновляем массив видимых категорий
+        updateVisibleCategories()
         
-                // Затем отправляем информацию о конкретных индексах для batch updates
-                onCategoryUpdate?(update)
+        // Создаем новое обновление, которое исключает закрепленные категории
+        // Это может потребовать дополнительной логики в зависимости от структуры TrackerCategoryUpdate
+        // Например, может потребоваться фильтрация insertedIndexes
+        
+        // Отправляем информацию о конкретных индексах для batch updates
+        onCategoryUpdate?(update)
     }
 }
 
@@ -64,5 +88,8 @@ extension CategoriesViewModel {
     func didCreateCategory(_ categoryName: String) {
         let newCategory = TrackerCategory(title: categoryName, trackers: [])
         model?.addCategory(with: newCategory)
+        
+        // После добавления новой категории обновляем visibleCategories
+        updateVisibleCategories()
     }
 }

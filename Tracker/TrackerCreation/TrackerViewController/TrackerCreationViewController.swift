@@ -205,12 +205,13 @@ final class TrackerCreationViewController: UIViewController {
         
         if trackerType == .edit {
             view.addSubview(labelEditMode)
-            labelEditMode.text = "\(completedDaysCount)"
-            
+            // Использование локализованной строки с форматированием для множественного числа
+            labelEditMode.text = String.localizedStringWithFormat(
+                NSLocalizedString("number.of.days", comment: "Pluralized form of days count"),
+                completedDaysCount
+            )
         }
-        
-        
-        
+    
         view.addSubview(nameTextField)
         view.addSubview(tableView)
         view.addSubview(collectionView)
@@ -325,8 +326,11 @@ final class TrackerCreationViewController: UIViewController {
         }
         createButton.isEnabled = isFormValid
         //createButton.backgroundColor = isFormValid ? .black : .lightGray
-        createButton.backgroundColor = isFormValid ? backgroundColorForButton : .lightGray
-
+        createButton.backgroundColor = isFormValid ?  UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        } : .lightGray
+        
     }
     
     // Обработчик изменения текста

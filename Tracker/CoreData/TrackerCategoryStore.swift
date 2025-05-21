@@ -123,20 +123,25 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
 
 extension TrackerCategoryStore: CategoriesViewControllerDelegate {
     func addCategory(with category: TrackerCategory) {
-        print("Добавление категории: \(category)")
-        
-        let trackerCategoryCoreData = TrackerCategoryCoreData(context: context)
-        trackerCategoryCoreData.title = category.title
-        
-        do {
-            try context.save()
+            print("Добавление категории: \(category)")
             
-            print("Категория успешно сохранена")
-        } catch {
-            print("Ошибка при сохранении категории: \(error)")
-            context.rollback()
+            let trackerCategoryCoreData = TrackerCategoryCoreData(context: context)
+            trackerCategoryCoreData.title = category.title
+            
+            do {
+                try context.save()
+                print("Категория успешно сохранена")
+                
+                let insertedIndexes = IndexSet(integer: self.numberOfRowsInSection(0) - 1)
+                delegate?.didUpdate(update: TrackerCategoryUpdate(insertedIndexes: insertedIndexes))
+                
+            } catch {
+                print("Ошибка при сохранении категории: \(error)")
+                context.rollback()
+            }
         }
-    }
+    
+
     
     func fetchCategories() -> [TrackerCategory] {
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")

@@ -104,7 +104,7 @@ final class CategoriesViewController: UIViewController {
         stackView.isHidden = true
         return stackView
     }()
-
+    
     private let placeholderImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "emptyTrackers")
@@ -112,7 +112,7 @@ final class CategoriesViewController: UIViewController {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
-
+    
     private let placeholderLabel: UILabel = {
         let label = UILabel()
         label.text = "Привычки и события можно\nобъединить по смыслу"
@@ -130,12 +130,12 @@ final class CategoriesViewController: UIViewController {
     
     private var rowsCount = 0
     private let cellHeight: CGFloat = 75 // Высота одной ячейки
-  
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
-               
+        
         setupUI()
         setupTableView()
         setupActions()
@@ -247,30 +247,31 @@ final class CategoriesViewController: UIViewController {
             print("Количество строк обновлено: \(count)")
             self.updateTableHeight()
         }
-                
+        
         // Подписываемся на обновления категорий
         viewModel.onCategoryUpdate = { [weak self] update in
             guard let self = self else { return }
             
+            print(" Мы тута ")
             // Преобразуем IndexSet в массив для удобного вывода
             let insertedArray = Array(update.insertedIndexes)
             print("Контроллер получил обновление таблицы. Вставленные индексы: \(insertedArray), Количество строк: \(self.rowsCount)")
-
-            self.tableView.performBatchUpdates {
-                let insertedIndexPaths = self.indexPaths(from: update.insertedIndexes)
-                print(insertedIndexPaths)
-                self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
-            } completion: { _ in
-                // После обновления таблицы обновляем высоту
-                self.updateTableHeight()
-                
-                // Обновляем разделители всех ячеек
-                //self.updateLastCellSeparator()
-            }
             
-//            tableView.reloadData()
-//            self.updateTableHeight()
-//            
+//            self.tableView.performBatchUpdates {
+//                let insertedIndexPaths = self.indexPaths(from: update.insertedIndexes)
+//                print(insertedIndexPaths)
+//                self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
+//            } completion: { _ in
+//                // После обновления таблицы обновляем высоту
+//                self.updateTableHeight()
+//                
+//                // Обновляем разделители всех ячеек
+//                //self.updateLastCellSeparator()
+//            }
+            
+                        tableView.reloadData()
+                        self.updateTableHeight()
+            //
             // Обновляем видимость заглушки после изменений
             self.updatePlaceholderVisibility()
         }
@@ -338,7 +339,7 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
         let selectedBackgroundView = UIView()
         selectedBackgroundView.backgroundColor = UIColor.systemGray5
         cell.selectedBackgroundView = selectedBackgroundView
-      
+        
         return cell
     }
     
@@ -354,16 +355,13 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let previousIndexPath = IndexPath(row: indexPath.row - 1, section: 0)
-         if let previousCell = tableView.cellForRow(at: previousIndexPath) {
-             // Добавляем новый разделитель
-             let customSeparator = UIView(frame: CGRect(x: 16, y: previousCell.frame.height - 2, width: previousCell.frame.width - 32, height: 0.5))
-             customSeparator.backgroundColor = UIColor(named: "YP Grey")
-             previousCell.contentView.addSubview(customSeparator)
-                        }
-                        
-   
-                    
-
+        if let previousCell = tableView.cellForRow(at: previousIndexPath) {
+            // Добавляем новый разделитель
+            let customSeparator = UIView(frame: CGRect(x: 16, y: previousCell.frame.height - 2, width: previousCell.frame.width - 32, height: 0.5))
+            customSeparator.backgroundColor = UIColor(named: "YP Grey")
+            previousCell.contentView.addSubview(customSeparator)
+        }
+        
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
