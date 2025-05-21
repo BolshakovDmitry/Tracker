@@ -1,5 +1,7 @@
 import UIKit
 
+
+
 protocol habitCreationVCDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to categoryTitle: String)
 }
@@ -92,6 +94,9 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
         collectionView.showsVerticalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         
+        // Разрешаем содержимому выходить за границы коллекции
+        collectionView.clipsToBounds = false
+        
         collectionView.register(TrackerCollectionViewCell.self, forCellWithReuseIdentifier: "TrackerCell")
         collectionView.register(TrackerHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
                                 withReuseIdentifier: "HeaderView"
@@ -117,6 +122,7 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         
         
         view.backgroundColor = UIColor(named: "BackGroundColor")
@@ -159,15 +165,17 @@ final class TrackersViewController: UIViewController, TrackerCreationViewControl
             placeholderImageView.heightAnchor.constraint(equalToConstant: 80),
             
             trackersCollectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 20),
-            trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+                    trackersCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+                    trackersCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+                    trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             filterButton.heightAnchor.constraint(equalToConstant: 50),
             filterButton.widthAnchor.constraint(equalToConstant: 114)
         ])
+        
+        view.clipsToBounds = false
         
     }
     
@@ -346,9 +354,7 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: collectionView.frame.width, height: 46)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 12, left: 0, bottom: 16, right: 0)
-    }
+    
 }
 
 // MARK: - UITextFieldSearchDelegate
@@ -382,7 +388,7 @@ extension TrackersViewController: TrackerCellDelegate {
         // Проверяем, что выбранная дата не находится в будущем, сравнивая только даты без учета времени
         let calendar = Calendar.current
         let today = Date()
-        
+        print(indexPath)
         // Сравниваем даты с помощью Calendar
         // Результат: -1 если datePicker.date раньше today, 0 если равны, 1 если datePicker.date позже today
         let comparison = calendar.compare(datePicker.date, to: today, toGranularity: .day)
@@ -398,9 +404,9 @@ extension TrackersViewController: TrackerCellDelegate {
         let tracker = TrackerRecord(id: id, date: datePicker.date)
         
         if isComplete {
-            delegateCellCoreData?.isDoneTapped(tracker: tracker, trackerType: type)
+            delegateCellCoreData?.isDoneTapped(tracker: tracker, trackerType: type, indexpath: indexPath)
         } else {
-            delegateCellCoreData?.unDoneTapped(tracker: tracker, trackerType: type)
+            delegateCellCoreData?.unDoneTapped(tracker: tracker, trackerType: type, indexpath: indexPath)
         }
         
     }
@@ -414,6 +420,25 @@ extension TrackersViewController: TrackerRecordStoreDelegate & TrackerStoreDeleg
         updatePlaceholderVisibility()
     }
     
+    func didUpdateTracker(at indexPath: IndexPath, isCompleted: Bool) {
+            // Обновляем только конкретную ячейку с помощью performBatchUpdates
+            trackersCollectionView.performBatchUpdates({
+                // Обновить ячейку по индексу
+                trackersCollectionView.reloadItems(at: [indexPath])
+            }, completion: nil)
+            
+            // Обновляем счетчик дней, если нужно
+            if let cell = trackersCollectionView.cellForItem(at: indexPath) as? TrackerCollectionViewCell,
+               let tracker = delegateCoreData?.object(at: indexPath) {
+                // Получаем обновленное количество дней
+                let daysCompleted = delegateCellCoreData?.countCompletedDays(id: tracker.id) ?? 0
+                
+                // Обновляем текст счетчика дней
+                let isPinned = delegateCoreData?.getCategory(at: indexPath) ?? "No category"
+                cell.configure(tracker: tracker, isCompletedToday: isCompleted, indexPath: indexPath, daysCompleted: daysCompleted, isPinned: isPinned)
+            }
+        }
+    
 }
 
 extension TrackersViewController {
@@ -422,6 +447,7 @@ extension TrackersViewController {
         // Simply delegate to the cell's existing method
         return cell?.previewForContextMenu() ?? UIViewController()
     }
+    
     
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         

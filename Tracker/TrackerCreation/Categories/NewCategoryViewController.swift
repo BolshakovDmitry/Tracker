@@ -126,7 +126,12 @@ final class NewCategoryViewController: UIViewController {
         guard let existingCategories = delegate?.isSameName(with: categoryName) else { return }
         
         if existingCategories {
-            alertPresenter.showAlert(with: "Ошибка", with: "Данная категория уже есть", show: self)
+            alertPresenter.showAlert(with: NSLocalizedString("error", comment: ""), with: NSLocalizedString("existing.category.mistake", comment: ""), show: self)
+            return
+        }
+        
+        if categoryName == NSLocalizedString("pinned", comment: "") {
+            alertPresenter.showAlert(with: NSLocalizedString("error", comment: ""), with: NSLocalizedString("choose.another.category.name", comment: ""), show: self)
             return
         }
         

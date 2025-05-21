@@ -26,7 +26,6 @@ final class CategoriesViewController: UIViewController {
     var delegate: CategoriesSelectionDelegate?
     private var viewModel: CategoriesViewModel
     
-    
     // MARK: - UI Elements
     
     private let titleLabel: UILabel = {
@@ -34,39 +33,68 @@ final class CategoriesViewController: UIViewController {
         label.text =  NSLocalizedString("category.tableview.button", comment: "")
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        // Используем системный цвет для автоматической адаптации
         label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
+    // Скролл-вью для контейнера (чтобы прокручивать, если слишком много категорий)
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.bounces = true
+        return scrollView
+    }()
+    
+    // Контентное представление для scrollView
+    private let contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    // Контейнер для таблицы со скругленными углами
+    private let tableContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     private let tableView: UITableView = {
         let tableView = UITableView()
-        // Используем системный цвет фона вместо белого
-        tableView.backgroundColor = .systemBackground
-        tableView.separatorStyle = .singleLine
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.layer.cornerRadius = 16
+        tableView.tableFooterView = UIView()
+        
+        // Отключаем скроллинг таблицы
+        tableView.isScrollEnabled = false
+        
         return tableView
     }()
+    
+    // Ограничение высоты таблицы, которое будем изменять при изменении данных
+    private var tableHeightConstraint: NSLayoutConstraint?
     
     private let addButton: UIButton = {
         let addButton = UIButton()
         addButton.setTitle(NSLocalizedString("add.category", comment: ""), for: .normal)
         addButton.setTitleColor(.white, for: .normal)
         addButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        // Используем системный цвет или динамический цвет
         addButton.backgroundColor = UIColor { traitCollection in
             return traitCollection.userInterfaceStyle == .dark ?
-                .systemBlue : .ypBlack // Используйте .systemBlue для темной темы или другой контрастный цвет
+                .systemBlue : .ypBlack
         }
         addButton.layer.cornerRadius = 16
         addButton.translatesAutoresizingMaskIntoConstraints = false
         return addButton
     }()
     
-    // Добавленный стек для заглушки
     private let placeholderStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -87,12 +115,11 @@ final class CategoriesViewController: UIViewController {
 
     private let placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("category.view.placeholder", comment: "")
+        label.text = "Привычки и события можно\nобъединить по смыслу"
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-        // Используем системный цвет текста
         label.textColor = .label
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -102,11 +129,11 @@ final class CategoriesViewController: UIViewController {
     // MARK: - Lifecycle
     
     private var rowsCount = 0
+    private let cellHeight: CGFloat = 75 // Высота одной ячейки
   
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Обновляем цвет фона на системный
         view.backgroundColor = .systemBackground
                
         setupUI()
@@ -116,14 +143,9 @@ final class CategoriesViewController: UIViewController {
         setupBindings()
     }
     
-    // Добавляем метод для отслеживания изменения темы
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
-            // Если нужно обновить какие-то элементы, специфичные для смены темы
-            tableView.reloadData() // Перезагружаем таблицу для обновления цветов
-        }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateTableHeight()
     }
     
     // MARK: - Setup UI
@@ -135,9 +157,14 @@ final class CategoriesViewController: UIViewController {
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
-        view.addSubview(tableView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        
+        contentView.addSubview(tableContainerView)
+        tableContainerView.addSubview(tableView)
+        contentView.addSubview(placeholderStackView)
+        
         view.addSubview(addButton)
-        view.addSubview(placeholderStackView)
         
         // Настраиваем констрейнты
         NSLayoutConstraint.activate([
@@ -145,25 +172,56 @@ final class CategoriesViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            // Таблица
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            tableView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -16),
+            // ScrollView для обеспечения прокрутки
+            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -16),
+            
+            // Content View внутри ScrollView
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor), // Ширина равна scrollView
+            
+            // Контейнер таблицы
+            tableContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            tableContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            tableContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            // Нижний констрейнт может быть гибким, если нужно добавить другие элементы в contentView
+            
+            // Таблица внутри контейнера
+            tableView.topAnchor.constraint(equalTo: tableContainerView.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: tableContainerView.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: tableContainerView.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: tableContainerView.bottomAnchor),
+            
+            // Стек с заглушкой
+            placeholderStackView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            placeholderStackView.centerYAnchor.constraint(equalTo: tableContainerView.centerYAnchor),
+            
+            // Размеры для изображения
+            placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
+            placeholderImageView.heightAnchor.constraint(equalToConstant: 80),
             
             // Кнопка
             addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             addButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            addButton.heightAnchor.constraint(equalToConstant: 60),
-            
-            // Стек с заглушкой
-            placeholderStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            placeholderStackView.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
-            
-            // Размеры для изображения
-            placeholderImageView.widthAnchor.constraint(equalToConstant: 80),
-            placeholderImageView.heightAnchor.constraint(equalToConstant: 80)
+            addButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+        
+        // Создаем констрейнт для высоты таблицы, который будем обновлять динамически
+        let tableHeightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
+        tableHeightConstraint.isActive = true
+        self.tableHeightConstraint = tableHeightConstraint
+        
+        // Добавляем констрейнт для высоты контейнера, равной высоте таблицы
+        NSLayoutConstraint.activate([
+            tableContainerView.heightAnchor.constraint(equalTo: tableView.heightAnchor),
+            // Добавляем констрейнт, чтобы контейнер был привязан к низу contentView
+            tableContainerView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor)
         ])
     }
     
@@ -184,25 +242,35 @@ final class CategoriesViewController: UIViewController {
     private func setupBindings() {
         // Подписываемся на изменение количества строк
         viewModel.rowsBinding = { [weak self] count in
-            guard let self else { return }
+            guard let self = self else { return }
             self.rowsCount = count
             print("Количество строк обновлено: \(count)")
+            self.updateTableHeight()
         }
                 
         // Подписываемся на обновления категорий
         viewModel.onCategoryUpdate = { [weak self] update in
-            guard let self else { return }
+            guard let self = self else { return }
             
             // Преобразуем IndexSet в массив для удобного вывода
             let insertedArray = Array(update.insertedIndexes)
             print("Контроллер получил обновление таблицы. Вставленные индексы: \(insertedArray), Количество строк: \(self.rowsCount)")
 
-            self.tableView.performBatchUpdates {
-                let insertedIndexPaths = self.indexPaths(from: update.insertedIndexes)
-                print(insertedIndexPaths)
-                self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
-            }
-     
+//            self.tableView.performBatchUpdates {
+//                let insertedIndexPaths = self.indexPaths(from: update.insertedIndexes)
+//                print(insertedIndexPaths)
+//                self.tableView.insertRows(at: insertedIndexPaths, with: .automatic)
+//            } completion: { _ in
+//                // После обновления таблицы обновляем высоту
+//                self.updateTableHeight()
+//                
+//                // Обновляем разделители всех ячеек
+//                //self.updateLastCellSeparator()
+//            }
+            
+            tableView.reloadData()
+            self.updateTableHeight()
+            
             // Обновляем видимость заглушки после изменений
             self.updatePlaceholderVisibility()
         }
@@ -220,7 +288,29 @@ final class CategoriesViewController: UIViewController {
     // MARK: - Helpers
     
     private func updatePlaceholderVisibility() {
-        placeholderStackView.isHidden = viewModel.hasCategories()
+        let hasCategories = viewModel.hasCategories()
+        placeholderStackView.isHidden = hasCategories
+        tableContainerView.isHidden = !hasCategories
+    }
+    
+    // Метод для обновления высоты таблицы на основе количества ячеек
+    private func updateTableHeight() {
+        // Вычисляем высоту таблицы на основе количества строк
+        let calculatedHeight = CGFloat(rowsCount) * cellHeight
+        
+        // Устанавливаем минимальную высоту, чтобы было видно пустой контейнер
+        let minHeight: CGFloat = rowsCount > 0 ? calculatedHeight : 150
+        
+        // Обновляем констрейнт высоты таблицы
+        tableHeightConstraint?.constant = minHeight
+        
+        // Обновляем contentSize scrollView, если она не обновляется автоматически
+        scrollView.layoutIfNeeded()
+        
+        // Обновляем высоту contentView, если необходимо
+        let contentHeight = tableContainerView.frame.maxY
+        contentView.frame.size.height = max(contentHeight, scrollView.frame.height)
+        scrollView.contentSize = CGSize(width: scrollView.frame.width, height: contentHeight)
     }
 }
 
@@ -240,15 +330,29 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
         cell.textLabel?.text = record.title
         cell.textLabel?.textColor = .label
         
-        // Настройка фона ячейки
-        cell.backgroundColor = .secondarySystemBackground
+        
+        // Делаем фон ячейки прозрачным, чтобы был виден фон контейнера
+        cell.backgroundColor = .clear
         
         // Настройка цвета выделения
         let selectedBackgroundView = UIView()
         selectedBackgroundView.backgroundColor = UIColor.systemGray5
         cell.selectedBackgroundView = selectedBackgroundView
-        
+      
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if indexPath.row == tableView.numberOfRows(inSection: 0) - 1 {
+            
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        } else {
+            
+            let customSeparator = UIView(frame: CGRect(x: 16, y: cell.frame.height - 2, width: cell.frame.width - 32, height: 0.5))
+            customSeparator.backgroundColor = UIColor(named: "YP Grey")
+            cell.contentView.addSubview(customSeparator)
+        }
+
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -263,6 +367,6 @@ extension CategoriesViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 75
-           }
-       }
+        return cellHeight
+    }
+}

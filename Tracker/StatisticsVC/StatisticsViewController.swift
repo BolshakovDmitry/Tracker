@@ -180,6 +180,10 @@ extension StatisticsViewController: UITableViewDelegate, UITableViewDataSource {
 // MARK: - TrackerRecordStoreDelegate
 
 extension StatisticsViewController: TrackerRecordStoreDelegate {
+    func didUpdateTracker(at indexPath: IndexPath, isCompleted: Bool) {
+        
+    }
+    
     func didUpdate() {
         // Вызывается при обновлении данных в хранилище
         updateStatistics()

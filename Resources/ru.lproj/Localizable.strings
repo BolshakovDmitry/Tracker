@@ -51,6 +51,8 @@
 "error" = "Ошибка";
 "must.have.all.fiedls" = "Необходимо заполнить все поля";
 "cannot.mark.future.trackers" = "Нельзя отмечать привычки для будущих дат";
+"existing.category.mistake" = "Данная категория уже есть";
+"choose.another.category.name" = "Пожалуйста, выберете другое название для категории";
 
 "weekday.monday.full" = "Понедельник";
 "weekday.tuesday.full" = "Вторник";

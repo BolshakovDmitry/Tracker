@@ -3,7 +3,6 @@ import CoreData
 
 struct TrackerCategoryUpdate {
     let insertedIndexes: IndexSet
-    let deletedIndexes: IndexSet
 }
 
 protocol TrackerCategoryStoreDelegate: AnyObject {
@@ -98,8 +97,7 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
        }
        
        delegate?.didUpdate(update: TrackerCategoryUpdate(
-           insertedIndexes: inserted,
-           deletedIndexes: deleted
+           insertedIndexes: inserted
        ))
 
        insertedIndexes = nil

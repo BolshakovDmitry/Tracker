@@ -51,6 +51,8 @@
 "error" = "Error";
 "must.have.all.fiedls" = "Please fill all the required fields";
 "cannot.mark.future.trackers" = "Cannot mark upcoming trackers";
+"existing.category.mistake" = "This category already exists";
+"choose.another.category.name" = "Please, choose a different category name";
 
 "weekday.monday.full" = "Monday";
 "weekday.tuesday.full" = "Tuesday";

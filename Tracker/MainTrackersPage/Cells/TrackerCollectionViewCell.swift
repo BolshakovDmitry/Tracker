@@ -152,6 +152,12 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
     }
     
     func configure(tracker: Tracker, isCompletedToday: Bool, indexPath: IndexPath, daysCompleted: Int, isPinned: String) {
+        
+        self.clipsToBounds = false
+            self.contentView.clipsToBounds = false
+        
+       
+        
         self.trackeType = tracker.type
         self.indexPath = indexPath
         self.isCompletedToday = isCompletedToday
@@ -161,7 +167,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         containerView.backgroundColor = tracker.color
         completeButton.backgroundColor = tracker.color
         
-        if isPinned == NSLocalizedString("pinned", comment: "") {
+        if isPinned == NSLocalizedString("pinned", comment: "") {            
             pinIcon.isHidden = false
         }
         
