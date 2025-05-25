@@ -3,7 +3,6 @@ import CoreData
 
 struct TrackerCategoryUpdate {
     let insertedIndexes: IndexSet
-    let deletedIndexes: IndexSet
 }
 
 protocol TrackerCategoryStoreDelegate: AnyObject {
@@ -22,7 +21,7 @@ final class TrackerCategoryStore: NSObject {
     private var insertedIndexes: IndexSet?
     private var deletedIndexes: IndexSet?
     internal var insertedIndexes2 = IndexSet()
-    private var delegate: TrackerCategoryStoreDelegate?
+    private weak var delegate: TrackerCategoryStoreDelegate?
     private let context: NSManagedObjectContext
     
     private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData> = {
@@ -98,8 +97,7 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
        }
        
        delegate?.didUpdate(update: TrackerCategoryUpdate(
-           insertedIndexes: inserted,
-           deletedIndexes: deleted
+           insertedIndexes: inserted
        ))
 
        insertedIndexes = nil
@@ -125,20 +123,25 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
 
 extension TrackerCategoryStore: CategoriesViewControllerDelegate {
     func addCategory(with category: TrackerCategory) {
-        print("Добавление категории: \(category)")
-        
-        let trackerCategoryCoreData = TrackerCategoryCoreData(context: context)
-        trackerCategoryCoreData.title = category.title
-        
-        do {
-            try context.save()
+            print("Добавление категории: \(category)")
             
-            print("Категория успешно сохранена")
-        } catch {
-            print("Ошибка при сохранении категории: \(error)")
-            context.rollback()
+            let trackerCategoryCoreData = TrackerCategoryCoreData(context: context)
+            trackerCategoryCoreData.title = category.title
+            
+            do {
+                try context.save()
+                print("Категория успешно сохранена")
+                
+                let insertedIndexes = IndexSet(integer: self.numberOfRowsInSection(0) - 1)
+                delegate?.didUpdate(update: TrackerCategoryUpdate(insertedIndexes: insertedIndexes))
+                
+            } catch {
+                print("Ошибка при сохранении категории: \(error)")
+                context.rollback()
+            }
         }
-    }
+    
+
     
     func fetchCategories() -> [TrackerCategory] {
         let fetchRequest = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")

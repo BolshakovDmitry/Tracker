@@ -1,5 +1,6 @@
 import CoreData
 import UIKit
+import YandexMobileMetrica
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,6 +16,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Делаем окно видимым и ключевым (активным)
         window?.makeKeyAndVisible()
+        
+        guard let configuration = YMMYandexMetricaConfiguration(apiKey: "486d878c-e155-4483-b982-dfb5253a1bf0") else { // используйте ваш ключ
+            return true
+        }
+            
+        YMMYandexMetrica.activate(with: configuration)
         
         return true
     }

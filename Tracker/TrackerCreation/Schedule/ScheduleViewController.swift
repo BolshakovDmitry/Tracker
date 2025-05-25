@@ -1,0 +1,191 @@
+import UIKit
+
+final class ScheduleViewController: UIViewController {
+    
+    // MARK: - Properties
+    weak var delegate: ScheduleSelectionDelegate?
+    private var selectedDays: [WeekDay] = []
+    
+    private let tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        
+        // Динамический цвет фона для темной темы
+        tableView.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+            UIColor(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0) : // Темно-серый для темной темы
+            UIColor(red: 0.9, green: 0.91, blue: 0.92, alpha: 0.3) // Светло-серый для светлой темы
+        }
+        
+        tableView.layer.cornerRadius = 16
+        tableView.isScrollEnabled = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
+    private let doneButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(NSLocalizedString("done.black.button", comment: ""), for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        
+        // Динамический цвет фона для темной темы
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
+        
+        // Динамический цвет текста для темной темы
+        button.setTitleColor(UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+        }, for: .normal)
+        
+        button.layer.cornerRadius = 16
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationItem.title =  NSLocalizedString("schedule.tableview.button", comment: "")
+        
+        // Системный цвет фона для поддержки темной темы
+        view.backgroundColor = .systemBackground
+        
+        setupUI()
+        setupTableView()
+        setupActions()
+        
+        // Настройка внешнего вида навигационной панели
+        setupNavigationBar()
+    }
+    
+    // Метод для отслеживания изменения темы
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            // Обновляем интерфейс при изменении темы
+            tableView.reloadData()
+            
+            // Обновляем цвет разделителей, если нужно
+            tableView.separatorColor = UIColor { traitCollection in
+                return traitCollection.userInterfaceStyle == .dark ?
+                UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+            }
+        }
+    }
+    
+    private func setupNavigationBar() {
+        // Настройка цвета текста заголовка для темной темы
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = .systemBackground
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+            
+            // Удаляем тень/разделитель
+            appearance.shadowImage = nil
+            appearance.shadowColor = .clear
+            
+            
+            navigationController?.navigationBar.standardAppearance = appearance
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+            navigationController?.navigationBar.tintColor = .label
+        } else {
+            navigationController?.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.label]
+            navigationController?.navigationBar.tintColor = .label
+        }
+    }
+    
+    private func setupUI() {
+        view.addSubview(tableView)
+        view.addSubview(doneButton)
+        
+        NSLayoutConstraint.activate([
+            // Таблица с отступом 16 от safe area top
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            tableView.heightAnchor.constraint(equalToConstant: CGFloat(WeekDay.allCases.count) * 75),
+            
+            // Кнопка "Готово" внизу экрана
+            doneButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            doneButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+    }
+    
+    private func setupTableView() {
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(DaySelectionCell.self, forCellReuseIdentifier: "DaySelectionCell")
+        tableView.tableFooterView = UIView()
+        tableView.separatorStyle = .singleLine
+        
+        // Динамический цвет разделителя
+        tableView.separatorColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+            UIColor.darkGray : UIColor(named: "CustomGrey") ?? .lightGray
+        }
+        
+        tableView.tableHeaderView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: CGFloat.leastNonzeroMagnitude))
+    }
+    
+    private func setupActions() {
+        doneButton.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func doneButtonTapped() {
+        delegate?.didSelectSchedule(selectedDays)
+        dismiss(animated: true)
+    }
+}
+
+// MARK: - UITableViewDataSource & UITableViewDelegate
+extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return WeekDay.allCases.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "DaySelectionCell", for: indexPath) as? DaySelectionCell
+        else { return UITableViewCell() }
+        
+        let weekDay = WeekDay.allCases[indexPath.row]
+        let isSelected = selectedDays.contains(weekDay)
+        
+        // Передаем информацию о текущей теме
+        let isDarkTheme = traitCollection.userInterfaceStyle == .dark
+        cell.configure(with: weekDay.localizedName, isSelected: isSelected, isDarkTheme: isDarkTheme)
+        
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let weekDay = WeekDay.allCases[indexPath.row]
+        
+        if let index = selectedDays.firstIndex(of: weekDay) {
+            selectedDays.remove(at: index)
+        } else {
+            selectedDays.append(weekDay)
+        }
+        
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if indexPath.row == WeekDay.allCases.count - 1 {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        } else {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        }
+    }
+}

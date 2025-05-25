@@ -14,13 +14,20 @@ public enum WeekDay: Int, CaseIterable, Hashable {
     
     var localizedName: String {
         switch self {
-        case .monday: return "Понедельник"
-        case .tuesday: return "Вторник"
-        case .wednesday: return "Среда"
-        case .thursday: return "Четверг"
-        case .friday: return "Пятница"
-        case .saturday: return "Суббота"
-        case .sunday: return "Воскресенье"
+        case .monday:
+            return NSLocalizedString("weekday.monday.full", comment: "Monday full name")
+        case .tuesday:
+            return NSLocalizedString("weekday.tuesday.full", comment: "Tuesday full name")
+        case .wednesday:
+            return NSLocalizedString("weekday.wednesday.full", comment: "Wednesday full name")
+        case .thursday:
+            return NSLocalizedString("weekday.thursday.full", comment: "Thursday full name")
+        case .friday:
+            return NSLocalizedString("weekday.friday.full", comment: "Friday full name")
+        case .saturday:
+            return NSLocalizedString("weekday.saturday.full", comment: "Saturday full name")
+        case .sunday:
+            return NSLocalizedString("weekday.sunday.full", comment: "Sunday full name")
         }
     }
     

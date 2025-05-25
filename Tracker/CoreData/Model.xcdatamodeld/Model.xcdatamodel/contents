@@ -9,6 +9,7 @@
         <attribute name="emojii" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="originalCategory" optional="YES" attributeType="String"/>
         <attribute name="schedule" optional="YES" attributeType="String" valueTransformerName="WeekDayValueTransformer" customClassName="[WeekDay]"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <relationship name="categoryLink" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TrackerCategoryCoreData" inverseName="trackers" inverseEntity="TrackerCategoryCoreData"/>

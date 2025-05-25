@@ -14,26 +14,33 @@ final class TrackerTypesViewController: UIViewController {
     }
     // MARK: - Public fields
     
-    weak var trackerViewControllerDelegate: HabitCreationViewControllerDelegate?
+    weak var trackerViewControllerDelegate: TrackerCreationViewControllerDelegate?
     
     
     // MARK: - UI Elements
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Создание трекера"
+        label.text = NSLocalizedString("trackers.creation.type.title", comment: "")
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
+            label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     private let habitButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Привычка", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitle(NSLocalizedString("habit.button.title", comment: ""), for: .normal)
+        button.setTitleColor(UIColor(named: "BackGroundColor"), for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -41,10 +48,16 @@ final class TrackerTypesViewController: UIViewController {
     
     private let irregularEventButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Нерегулярное событие", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitle(NSLocalizedString("event.button.title", comment: ""), for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+                return traitCollection.userInterfaceStyle == .dark ?
+                .black : .white
+            }, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            return traitCollection.userInterfaceStyle == .dark ?
+                .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -55,6 +68,8 @@ final class TrackerTypesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .systemBackground
+        
         setupUI()
         setupActions()
     }
@@ -62,7 +77,6 @@ final class TrackerTypesViewController: UIViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.backgroundColor = .white
         
         // Добавляем элементы на экран
         view.addSubview(titleLabel)
@@ -98,9 +112,9 @@ final class TrackerTypesViewController: UIViewController {
     
     @objc private func habitButtonTapped() {
         
-        let habitCreationVC = HabitCreationViewController()
+        let habitCreationVC = TrackerCreationViewController()
         habitCreationVC.delegate = trackerViewControllerDelegate
-        habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
+        habitCreationVC.delegateTrackerCoreData = delegateCoreData as? any TrackerCreationViewControllerDelegate
         habitCreationVC.modalPresentationStyle = .pageSheet
         
         present(habitCreationVC, animated: true, completion: nil)
@@ -108,10 +122,10 @@ final class TrackerTypesViewController: UIViewController {
     
     @objc private func irregularEventButtonTapped() {
         print("Выбрано нерегулярное событие")
-        let irregularEventVC = HabitCreationViewController()
+        let irregularEventVC = TrackerCreationViewController()
         irregularEventVC.trackerType = .irregularEvent
         irregularEventVC.delegate = trackerViewControllerDelegate
-        irregularEventVC.delegateTrackerCoreData = delegateCoreData as? any HabitCreationViewControllerDelegate
+        irregularEventVC.delegateTrackerCoreData = delegateCoreData as? any TrackerCreationViewControllerDelegate
         irregularEventVC.modalPresentationStyle = .pageSheet
         present(irregularEventVC, animated: true, completion: nil)
     }
