@@ -21,7 +21,7 @@ final class TrackerCategoryStore: NSObject {
     private var insertedIndexes: IndexSet?
     private var deletedIndexes: IndexSet?
     internal var insertedIndexes2 = IndexSet()
-    private var delegate: TrackerCategoryStoreDelegate?
+    private weak var delegate: TrackerCategoryStoreDelegate?
     private let context: NSManagedObjectContext
     
     private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData> = {

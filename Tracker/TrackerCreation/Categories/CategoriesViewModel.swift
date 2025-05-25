@@ -13,7 +13,7 @@ protocol CategoriesViewModelProtocol {
 
 final class CategoriesViewModel: CategoriesViewModelProtocol {
  
-    var model: TrackerCategoryStore?
+    var categoryStore: TrackerCategoryStore?
     
     // Массив для хранения видимых категорий (исключая "Закрепленные")
     private var visibleCategories: [TrackerCategory] = []
@@ -23,13 +23,13 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
     
     init() {
         let trackerCategoryStore = TrackerCategoryStore(delegate: self)
-        self.model = trackerCategoryStore
+        self.categoryStore = trackerCategoryStore
         updateVisibleCategories()
     }
     
     // Метод для обновления массива видимых категорий
     private func updateVisibleCategories() {
-        let allCategories = model?.fetchCategories() ?? []
+        let allCategories = categoryStore?.fetchCategories() ?? []
         visibleCategories = allCategories.filter { $0.title != pinnedCategoryName }
         
         // Оповещаем о изменении количества строк
@@ -63,7 +63,7 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
     
     func isSameName(with name: String) -> Bool {
         // Проверяем, есть ли категория с таким именем среди всех категорий
-        let existingCategories = model?.fetchCategories() ?? []
+        let existingCategories = categoryStore?.fetchCategories() ?? []
         return existingCategories.contains { $0.title == name }
     }
 }
@@ -87,7 +87,7 @@ extension CategoriesViewModel: TrackerCategoryStoreDelegate {
 extension CategoriesViewModel {
     func didCreateCategory(_ categoryName: String) {
         let newCategory = TrackerCategory(title: categoryName, trackers: [])
-        model?.addCategory(with: newCategory)
+        categoryStore?.addCategory(with: newCategory)
         
         // После добавления новой категории обновляем visibleCategories
         updateVisibleCategories()

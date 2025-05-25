@@ -7,7 +7,7 @@ protocol TrackerCellDelegate: AnyObject {
 
 final class TrackerCollectionViewCell: UICollectionViewCell {
     
-    private var trackeType: TrackerType?
+    private var trackerType: TrackerType?
     // Элементы интерфейса ячейки (эмодзи, название, цвет и т.д.)
     private let containerView: UIView = {
         let view = UIView()
@@ -137,7 +137,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
             return
         }
         isCompletedToday.toggle()
-        delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath, type: trackeType ?? .habit)
+        delegate?.isDone(isComplete: isCompletedToday, id: trackerId, with: indexPath, type: trackerType ?? .habit)
         
     }
     
@@ -158,7 +158,7 @@ final class TrackerCollectionViewCell: UICollectionViewCell {
         
        
         
-        self.trackeType = tracker.type
+        self.trackerType = tracker.type
         self.indexPath = indexPath
         self.isCompletedToday = isCompletedToday
         trackerId = tracker.id

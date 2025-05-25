@@ -6,7 +6,7 @@ final class StatisticsViewController: UIViewController {
     // MARK: - Types
     
     // Модель данных для статистики
-    struct StatisticItem {
+    struct StatisticModel {
         let title: String
         let value: Int
     }
@@ -14,7 +14,7 @@ final class StatisticsViewController: UIViewController {
     // MARK: - Properties
     
     private var trackerRecordStore: TrackerRecordStoreProtocol?
-    private var statistics: [StatisticItem] = []
+    private var statistics: [StatisticModel] = []
     
     // MARK: - UI Elements
     
@@ -139,7 +139,7 @@ final class StatisticsViewController: UIViewController {
         
         // Создаем массив с элементами статистики
         statistics = [
-            StatisticItem(title: String.localizedStringWithFormat(
+            StatisticModel(title: String.localizedStringWithFormat(
                 NSLocalizedString("statistics", comment: "")),
                           value: completedCount)
         ]
@@ -167,7 +167,7 @@ extension StatisticsViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let item = statistics[indexPath.row]
-        cell.configure(with: item.value, title: item.title)
+        cell.configure(with: item.value, descriptionText: item.title)
         
         return cell
     }

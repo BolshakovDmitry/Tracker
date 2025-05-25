@@ -433,7 +433,7 @@ final class TrackerCreationViewController: UIViewController {
         let categoryVC = CategoriesViewController(viewModel: viewModel)
         let trackerCategoryStore = TrackerCategoryStore(delegate: viewModel)
         
-        viewModel.model = trackerCategoryStore
+        viewModel.categoryStore = trackerCategoryStore
         categoryVC.delegate = self
         
         categoryVC.modalPresentationStyle = .pageSheet

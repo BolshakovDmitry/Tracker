@@ -72,9 +72,9 @@ final class StatisticsTableViewCell: UITableViewCell {
     
     // MARK: - Public methods
     
-    func configure(with value: Int, title: String) {
-        valueLabel.text = "\(value)"
-        titleLabel.text = title
+    func configure(with statisticValue: Int, descriptionText: String) {
+        valueLabel.text = "\(statisticValue)"
+        titleLabel.text = descriptionText
         
         // Принудительно вызываем layoutIfNeeded для обновления размеров
         setNeedsLayout()
@@ -100,7 +100,7 @@ final class StatisticsTableViewCell: UITableViewCell {
 }
 
 // Отдельный класс для градиентной рамки
-class GradientBorderView: UIView {
+final class GradientBorderView: UIView {
     
     // Внутреннее представление с фоном
     let contentView: UIView = {
